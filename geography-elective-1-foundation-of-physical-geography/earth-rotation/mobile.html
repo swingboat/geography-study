@@ -98,6 +98,20 @@
                 display: none !important;
             }
         }
+        
+        /* JS控制的横竖屏状态（作为Android兼容方案） */
+        body.is-landscape .portrait-overlay {
+            display: none !important;
+        }
+        body.is-landscape .main-container {
+            display: flex !important;
+        }
+        body.is-portrait .portrait-overlay {
+            display: flex !important;
+        }
+        body.is-portrait .main-container {
+            display: none !important;
+        }
 
         /* ==================== 横屏主界面 ==================== */
         .main-container {
@@ -518,9 +532,9 @@
                     <h4>⚙️ 速度</h4>
                     <div class="speed-control">
                         <button class="speed-btn" id="pause-btn">⏸</button>
-                        <button class="speed-btn" data-speed="0.3">慢</button>
-                        <button class="speed-btn active" data-speed="1">中</button>
-                        <button class="speed-btn" data-speed="3">快</button>
+                        <button class="speed-btn" data-speed="1">慢</button>
+                        <button class="speed-btn active" data-speed="2">中</button>
+                        <button class="speed-btn" data-speed="5">快</button>
                     </div>
                 </div>
 
@@ -638,7 +652,7 @@
 
         let scene, camera, renderer;
         let earth, earthGroup;
-        let animationSpeed = 1;
+        let animationSpeed = 2;
         let isPaused = false;
 
         const cameraPositions = {
@@ -975,7 +989,37 @@
         });
 
         // 启动
-        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('DOMContentLoaded', function() {
+            checkOrientation();
+            init();
+        });
+        
+        // 检测屏幕方向（兼容Android）
+        function checkOrientation() {
+            const isLandscape = window.innerWidth > window.innerHeight;
+            document.body.classList.toggle('is-landscape', isLandscape);
+            document.body.classList.toggle('is-portrait', !isLandscape);
+            
+            // 横屏时触发重绘
+            if (isLandscape && renderer) {
+                onWindowResize();
+            }
+        }
+        
+        // 监听屏幕方向变化
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', function() {
+            // 延迟检测，等待旋转完成
+            setTimeout(checkOrientation, 100);
+            setTimeout(checkOrientation, 300);
+        });
+        
+        // 屏幕方向API（部分Android支持）
+        if (screen.orientation) {
+            screen.orientation.addEventListener('change', function() {
+                setTimeout(checkOrientation, 100);
+            });
+        }
     </script>
 </body>
 </html>

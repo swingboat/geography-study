@@ -98,6 +98,20 @@
                 display: none !important;
             }
         }
+        
+        /* JS控制的横竖屏状态（作为Android兼容方案） */
+        body.is-landscape .portrait-overlay {
+            display: none !important;
+        }
+        body.is-landscape .main-container {
+            display: flex !important;
+        }
+        body.is-portrait .portrait-overlay {
+            display: flex !important;
+        }
+        body.is-portrait .main-container {
+            display: none !important;
+        }
 
         /* ==================== 横屏主界面 ==================== */
         .main-container {
@@ -507,9 +521,9 @@
                     <h4>⚙️ 速度</h4>
                     <div class="speed-control">
                         <button class="speed-btn" id="pause-btn">⏸</button>
-                        <button class="speed-btn" data-speed="0.3">慢</button>
-                        <button class="speed-btn active" data-speed="1">中</button>
-                        <button class="speed-btn" data-speed="3">快</button>
+                        <button class="speed-btn" data-speed="1">慢</button>
+                        <button class="speed-btn active" data-speed="2">中</button>
+                        <button class="speed-btn" data-speed="5">快</button>
                     </div>
                 </div>
 
@@ -618,10 +632,10 @@
         let scene, camera, renderer;
         let earth, earthGroup, sun;
         let orbitAngle = 0;
-        let animationSpeed = 1;
+        let animationSpeed = 2;
         let isPaused = false;
         let subsolarMarker = null;
-        let sunRays = [];  // 太阳光线数组
+        let sunRay = null;  // 太阳直射线
 
         const seasons = {
             spring: { angle: 0, name: '春分', subsolar: '赤道 (0°)', date: '3月21日左右' },
@@ -893,35 +907,28 @@
             const glow = new THREE.Mesh(glowGeometry, glowMaterial);
             subsolarMarker.add(glow);
             
-            // 创建太阳光线
-            createSunRays();
+            // 创建太阳直射线
+            createSunRay();
         }
         
-        function createSunRays() {
-            // 创建多条光线表示太阳光
-            const rayCount = 5;
-            for (let i = 0; i < rayCount; i++) {
-                const rayGeometry = new THREE.BufferGeometry();
-                const rayPositions = new Float32Array(6);
-                rayGeometry.setAttribute('position', new THREE.BufferAttribute(rayPositions, 3));
-                
-                const opacity = i === 2 ? 0.9 : 0.4; // 中间的光线最亮
-                const rayMaterial = new THREE.LineBasicMaterial({
-                    color: 0xffff00,
-                    transparent: true,
-                    opacity: opacity,
-                    linewidth: 2
-                });
-                
-                const ray = new THREE.Line(rayGeometry, rayMaterial);
-                ray.userData.rayIndex = i;
-                scene.add(ray);
-                sunRays.push(ray);
-            }
+        function createSunRay() {
+            const rayGeometry = new THREE.BufferGeometry();
+            const rayPositions = new Float32Array(6);
+            rayGeometry.setAttribute('position', new THREE.BufferAttribute(rayPositions, 3));
+            
+            const rayMaterial = new THREE.LineBasicMaterial({
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0.9,
+                linewidth: 2
+            });
+            
+            sunRay = new THREE.Line(rayGeometry, rayMaterial);
+            scene.add(sunRay);
         }
         
-        function updateSunRays() {
-            if (sunRays.length === 0 || !earthGroup || !sun) return;
+        function updateSunRay() {
+            if (!sunRay || !earthGroup || !sun) return;
             
             const earthPos = earthGroup.position.clone();
             const sunPos = sun.position.clone();
@@ -929,27 +936,19 @@
             // 计算方向
             const direction = earthPos.clone().sub(sunPos).normalize();
             
-            // 更新每条光线
-            sunRays.forEach((ray, index) => {
-                // 光线起点（太阳表面附近）
-                const offset = (index - 2) * 0.5; // -1, -0.5, 0, 0.5, 1
-                const perpendicular = new THREE.Vector3(0, 1, 0);
-                const startOffset = perpendicular.clone().multiplyScalar(offset);
-                const startPoint = sunPos.clone().add(direction.clone().multiplyScalar(1.8)).add(startOffset);
-                
-                // 光线终点（地球表面附近）
-                const endOffset = perpendicular.clone().multiplyScalar(offset * 0.3);
-                const endPoint = earthPos.clone().add(direction.clone().multiplyScalar(-1.9)).add(endOffset);
-                
-                const positions = ray.geometry.attributes.position.array;
-                positions[0] = startPoint.x;
-                positions[1] = startPoint.y;
-                positions[2] = startPoint.z;
-                positions[3] = endPoint.x;
-                positions[4] = endPoint.y;
-                positions[5] = endPoint.z;
-                ray.geometry.attributes.position.needsUpdate = true;
-            });
+            // 光线起点（太阳表面）
+            const startPoint = sunPos.clone().add(direction.clone().multiplyScalar(1.5));
+            // 光线终点（地球表面）
+            const endPoint = earthPos.clone().add(direction.clone().multiplyScalar(-1.85));
+            
+            const positions = sunRay.geometry.attributes.position.array;
+            positions[0] = startPoint.x;
+            positions[1] = startPoint.y;
+            positions[2] = startPoint.z;
+            positions[3] = endPoint.x;
+            positions[4] = endPoint.y;
+            positions[5] = endPoint.z;
+            sunRay.geometry.attributes.position.needsUpdate = true;
         }
 
         function createOrbit() {
@@ -1039,8 +1038,8 @@
                 subsolarMarker.position.copy(markerPos);
             }
             
-            // 更新太阳光线
-            updateSunRays();
+            // 更新太阳直射线
+            updateSunRay();
 
             updateInfoPanel(angle);
         }
@@ -1169,7 +1168,37 @@
         });
 
         // 启动
-        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('DOMContentLoaded', function() {
+            checkOrientation();
+            init();
+        });
+        
+        // 检测屏幕方向（兼容Android）
+        function checkOrientation() {
+            const isLandscape = window.innerWidth > window.innerHeight;
+            document.body.classList.toggle('is-landscape', isLandscape);
+            document.body.classList.toggle('is-portrait', !isLandscape);
+            
+            // 横屏时触发重绘
+            if (isLandscape && renderer) {
+                onWindowResize();
+            }
+        }
+        
+        // 监听屏幕方向变化
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', function() {
+            // 延迟检测，等待旋转完成
+            setTimeout(checkOrientation, 100);
+            setTimeout(checkOrientation, 300);
+        });
+        
+        // 屏幕方向API（部分Android支持）
+        if (screen.orientation) {
+            screen.orientation.addEventListener('change', function() {
+                setTimeout(checkOrientation, 100);
+            });
+        }
     </script>
 </body>
 </html>
