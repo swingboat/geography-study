@@ -1715,9 +1715,22 @@
         });
 
         // ============================================
+        // 移动端检测与跳转
+        // ============================================
+        function checkMobileDevice() {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+                           (window.innerWidth <= 768 && 'ontouchstart' in window);
+            
+            if (isMobile) {
+                window.location.replace('mobile.html');
+            }
+        }
+
+        // ============================================
         // 启动程序
         // ============================================
         window.addEventListener('DOMContentLoaded', () => {
+            checkMobileDevice();
             init();
         });
     </script>

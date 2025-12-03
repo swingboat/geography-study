@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="screen-orientation" content="landscape">
+    <title>地球自转 - 移动版</title>
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d1b2a 100%);
+            color: #fff;
+        }
+
+        /* ==================== 竖屏提示界面 ==================== */
+        .portrait-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d1b2a 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .portrait-overlay .rotate-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            animation: rotate-hint 2s ease-in-out infinite;
+        }
+
+        @keyframes rotate-hint {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-20deg); }
+            75% { transform: rotate(20deg); }
+        }
+
+        .portrait-overlay h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #ffd54f;
+        }
+
+        .portrait-overlay p {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+            max-width: 300px;
+        }
+
+        .portrait-overlay .home-link {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .portrait-overlay .home-link:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 横屏时隐藏竖屏提示 */
+        @media (orientation: landscape) {
+            .portrait-overlay {
+                display: none !important;
+            }
+        }
+
+        /* 竖屏时隐藏主内容 */
+        @media (orientation: portrait) {
+            .main-container {
+                display: none !important;
+            }
+        }
+
+        /* ==================== 横屏主界面 ==================== */
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        /* 顶部栏 */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.4);
+            flex-shrink: 0;
+        }
+
+        .top-bar .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .top-bar .back-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .top-bar .title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffd54f;
+        }
+
+        .top-bar .help-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(100, 180, 255, 0.8);
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 主内容区 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 3D画布区域 */
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a15 100%);
+        }
+
+        #three-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 右侧控制面板 */
+        .side-panel {
+            width: 160px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .panel-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .panel-section h4 {
+            font-size: 0.75rem;
+            color: #ffd54f;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 视角按钮 */
+        .view-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.75rem;
+            text-align: left;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.2s;
+        }
+
+        .view-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .view-btn.active {
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+        }
+
+        .view-btn:active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .view-btn.active:active {
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+        }
+
+        /* 速度控制 */
+        .speed-control {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .speed-btn {
+            flex: 1;
+            min-width: 40px;
+            padding: 6px 8px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.7rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .speed-btn.active {
+            background: #ffd54f;
+            color: #000;
+        }
+
+        .speed-btn:active {
+            opacity: 0.8;
+        }
+
+        /* 图例 */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .legend-color.equator { background: #44ff44; }
+        .legend-color.tropic-n { background: #ff6633; }
+        .legend-color.tropic-s { background: #33bbff; }
+        .legend-color.axis { background: #ffffff; }
+        .legend-color.marker { background: #ff3333; }
+
+        /* 底部信息栏 */
+        .bottom-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        .bottom-info .direction-hint {
+            color: #aaffaa;
+            margin-bottom: 3px;
+        }
+
+        .bottom-info .sub-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+        }
+
+        /* ==================== 知识点弹窗 ==================== */
+        .knowledge-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .knowledge-modal.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(15, 25, 45, 0.95);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .modal-header h3 {
+            font-size: 1rem;
+            color: #ffd54f;
+        }
+
+        .modal-header .close-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 15px;
+        }
+
+        /* 知识卡片 - 横向滚动 */
+        .cards-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 10px;
+        }
+
+        .cards-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .cards-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 100, 0.3);
+            border-radius: 2px;
+        }
+
+        .knowledge-card {
+            flex: 0 0 280px;
+            scroll-snap-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .knowledge-card h4 {
+            font-size: 0.9rem;
+            color: #ffd54f;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .knowledge-card p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .knowledge-card ul {
+            margin-left: 15px;
+            margin-top: 6px;
+        }
+
+        .knowledge-card li {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+            margin-bottom: 3px;
+        }
+
+        .knowledge-card strong {
+            color: #ffd54f;
+        }
+
+        .knowledge-card .formula {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-family: monospace;
+            color: #80ffaa;
+            font-size: 0.75rem;
+        }
+
+        .knowledge-card table {
+            width: 100%;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            border-collapse: collapse;
+        }
+
+        .knowledge-card th {
+            color: #ffd54f;
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .knowledge-card td {
+            padding: 4px 5px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .modal-footer {
+            padding: 10px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 竖屏提示 -->
+    <div class="portrait-overlay">
+        <div class="rotate-icon">📱</div>
+        <h2>请横屏使用</h2>
+        <p>为了获得最佳的3D交互学习体验，请将手机横向放置</p>
+        <a href="../../mobile.html" class="home-link">🏠 返回主页</a>
+    </div>
+
+    <!-- 横屏主界面 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <a href="../../mobile.html" class="back-btn">
+                <span>‹</span> 返回
+            </a>
+            <span class="title">🌍 地球自转</span>
+            <button class="help-btn" onclick="showKnowledgeModal()">?</button>
+        </div>
+
+        <div class="content-area">
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+                
+                <!-- 底部提示 -->
+                <div class="bottom-info">
+                    <div class="direction-hint">🔴 观察红色标记点移动方向</div>
+                    <div class="sub-hint">自转方向：自西向东</div>
+                </div>
+            </div>
+
+            <!-- 右侧控制面板 -->
+            <div class="side-panel">
+                <div class="panel-section">
+                    <h4>👁️ 视角</h4>
+                    <button class="view-btn active" data-view="default">🌐 斜侧视角</button>
+                    <button class="view-btn" data-view="north-pole">🔵 北极俯视</button>
+                    <button class="view-btn" data-view="south-pole">⚪ 南极仰视</button>
+                    <button class="view-btn" data-view="equator">🟢 赤道侧面</button>
+                </div>
+
+                <div class="panel-section">
+                    <h4>⚙️ 速度</h4>
+                    <div class="speed-control">
+                        <button class="speed-btn" id="pause-btn">⏸</button>
+                        <button class="speed-btn" data-speed="0.3">慢</button>
+                        <button class="speed-btn active" data-speed="1">中</button>
+                        <button class="speed-btn" data-speed="3">快</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h4>📍 图例</h4>
+                    <div class="legend-item">
+                        <div class="legend-color equator"></div>
+                        <span>赤道</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color tropic-n"></div>
+                        <span>北回归线</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color tropic-s"></div>
+                        <span>南回归线</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color axis"></div>
+                        <span>地轴</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color marker"></div>
+                        <span>标记点</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 知识点弹窗 -->
+    <div class="knowledge-modal" id="knowledge-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 地球自转知识点</h3>
+                <button class="close-btn" onclick="hideKnowledgeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="cards-scroll">
+                    <div class="knowledge-card">
+                        <h4>🌍 什么是地球自转？</h4>
+                        <p><strong>定义：</strong>地球绕着穿过南北两极的地轴自西向东转动。</p>
+                        <p><strong>方向：</strong>自西向东。北极俯视=逆时针，南极仰视=顺时针。</p>
+                        <p><strong>地轴指向：</strong>始终指向北极星附近。</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>🧭 东西方向的定义</h4>
+                        <p><strong>核心：</strong>东西方向基于地球自转定义。</p>
+                        <ul>
+                            <li><strong>东方</strong> = 自转前进方向</li>
+                            <li><strong>西方</strong> = 自转反方向</li>
+                        </ul>
+                        <div class="formula">面向北方：右手=东，左手=西</div>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>⏰ 自转周期</h4>
+                        <p><strong>太阳日：</strong>24小时（昼夜更替周期）</p>
+                        <p><strong>恒星日：</strong>23时56分4秒（真正自转周期）</p>
+                        <p style="color: #80ffaa;"><strong>差异原因：</strong>公转使地球需多转约1°才能再次面对太阳</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>📐 角速度</h4>
+                        <p><strong>定义：</strong>单位时间转过的角度</p>
+                        <div class="formula">ω = 360° ÷ 24h ≈ 15°/小时</div>
+                        <p><strong>特点：</strong>除极点外，全球各点角速度相等</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>📏 线速度</h4>
+                        <p><strong>定义：</strong>单位时间走过的弧长</p>
+                        <div class="formula">赤道 ≈ 1670 km/h</div>
+                        <p><strong>规律：</strong>从赤道向两极递减，60°纬度=赤道的一半</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>🌐 各纬度线速度</h4>
+                        <table>
+                            <tr><th>纬度</th><th>线速度</th><th>比例</th></tr>
+                            <tr><td>0°赤道</td><td>1670</td><td>100%</td></tr>
+                            <tr><td>30°</td><td>1447</td><td>87%</td></tr>
+                            <tr><td>60°</td><td>835</td><td>50%</td></tr>
+                            <tr><td>90°极点</td><td>0</td><td>0%</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>💡 记忆要点</h4>
+                        <ul>
+                            <li>自转方向：<strong>自西向东</strong></li>
+                            <li>地轴指向：<strong>北极星</strong></li>
+                            <li>太阳日 <strong>24h</strong>，恒星日 <strong>23h56m</strong></li>
+                            <li>角速度：全球相等 <strong>15°/h</strong></li>
+                            <li>线速度：<strong>赤道最大</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">← 左右滑动查看更多 →</div>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // ============================================
+        // 地球自转 - 移动版
+        // ============================================
+
+        const OBLIQUITY = 23.5;
+        const OBLIQUITY_RAD = OBLIQUITY * Math.PI / 180;
+
+        let scene, camera, renderer;
+        let earth, earthGroup;
+        let animationSpeed = 1;
+        let isPaused = false;
+
+        const cameraPositions = {
+            'default': { pos: [12, 8, 15], lookAt: [0, 0, 0] },
+            'north-pole': { pos: [0, 25, 0.01], lookAt: [0, 0, 0] },
+            'south-pole': { pos: [0, -25, 0.01], lookAt: [0, 0, 0] },
+            'equator': { pos: [22, 0, 0], lookAt: [0, 0, 0] }
+        };
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('three-canvas');
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(12, 8, 15);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            createStarfield();
+            createSun();
+            createEarth();
+            createPolarStar();
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(onWindowResize, 100);
+            });
+
+            setupEventListeners();
+            animate();
+        }
+
+        function createStarfield() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 1000;
+            const positions = new Float32Array(starCount * 3);
+
+            for (let i = 0; i < starCount * 3; i += 3) {
+                const radius = 80 + Math.random() * 80;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                positions[i] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                positions[i + 2] = radius * Math.cos(phi);
+            }
+
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        function createSun() {
+            const sunGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            sun.position.set(-25, 4, 0);
+            scene.add(sun);
+
+            const sunLight = new THREE.PointLight(0xffffff, 1.5, 100);
+            sun.add(sunLight);
+        }
+
+        function createEarth() {
+            earthGroup = new THREE.Group();
+            scene.add(earthGroup);
+            
+            const tiltedGroup = new THREE.Group();
+            tiltedGroup.rotation.z = -OBLIQUITY_RAD;
+            earthGroup.add(tiltedGroup);
+
+            const earthGeometry = new THREE.SphereGeometry(4, 64, 64);
+            
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load(
+                'https://unpkg.com/three-globe@2.24.10/example/img/earth-blue-marble.jpg'
+            );
+            
+            const earthMaterial = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                specular: new THREE.Color(0x333333),
+                shininess: 15
+            });
+            
+            earth = new THREE.Mesh(earthGeometry, earthMaterial);
+            earth.renderOrder = 10;
+            tiltedGroup.add(earth);
+            
+            earthGroup.userData.tiltedGroup = tiltedGroup;
+
+            // 大气层
+            const atmosphereGeometry = new THREE.SphereGeometry(4.1, 64, 64);
+            const atmosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4da6ff,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.BackSide
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            tiltedGroup.add(atmosphere);
+
+            createEarthAxis();
+            createLatitudeLines();
+            createRotationMarker();
+        }
+
+        function createEarthAxis() {
+            const axisLength = 7;
+            const tiltedGroup = earthGroup.userData.tiltedGroup;
+            
+            const axisGeometry = new THREE.CylinderGeometry(0.04, 0.04, axisLength * 2, 8);
+            const axisMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.9, transparent: true });
+            const axis = new THREE.Mesh(axisGeometry, axisMaterial);
+            tiltedGroup.add(axis);
+
+            const northArrowGeometry = new THREE.ConeGeometry(0.15, 0.4, 8);
+            const northArrowMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            const northArrow = new THREE.Mesh(northArrowGeometry, northArrowMaterial);
+            northArrow.position.set(0, axisLength + 0.2, 0);
+            tiltedGroup.add(northArrow);
+        }
+
+        function createLatitudeLines() {
+            createLatitudeLine(0, 0x44ff44, 2);
+            createLatitudeLine(OBLIQUITY, 0xff6633, 1.5);
+            createLatitudeLine(-OBLIQUITY, 0x33bbff, 1.5);
+        }
+
+        function createLatitudeLine(latitude, color, thickness) {
+            const latRad = latitude * Math.PI / 180;
+            const radius = 4.03 * Math.cos(latRad);
+            const y = 4.03 * Math.sin(latRad);
+
+            const segments = 64;
+            const points = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(
+                    radius * Math.cos(theta),
+                    y,
+                    radius * Math.sin(theta)
+                ));
+            }
+
+            const curve = new THREE.CatmullRomCurve3(points, true);
+            const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.02 * thickness, 8, true);
+            const tubeMaterial = new THREE.MeshBasicMaterial({ color: color, opacity: 0.85, transparent: true });
+            
+            const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+            earth.add(tube);
+        }
+
+        function createRotationMarker() {
+            const markerRadius = 4.1;
+            
+            const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+            const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+            marker.position.set(markerRadius, 0, 0);
+            earth.add(marker);
+            
+            const glowGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff6666,
+                transparent: true,
+                opacity: 0.5
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            marker.add(glow);
+
+            // 拖尾
+            for (let i = 1; i <= 6; i++) {
+                const angle = -i * 0.15;
+                const opacity = 1 - (i / 6);
+                const size = 0.15 - (i * 0.015);
+                
+                const trailGeometry = new THREE.SphereGeometry(size, 8, 8);
+                const trailMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xff6666,
+                    transparent: true,
+                    opacity: opacity * 0.6
+                });
+                const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+                trail.position.set(
+                    markerRadius * Math.cos(angle),
+                    0,
+                    markerRadius * Math.sin(angle)
+                );
+                earth.add(trail);
+            }
+        }
+
+        function createPolarStar() {
+            const distance = 35;
+            const x = distance * Math.sin(OBLIQUITY_RAD);
+            const y = distance * Math.cos(OBLIQUITY_RAD);
+
+            const starGeometry = new THREE.SphereGeometry(0.6, 16, 16);
+            const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+            const polarStar = new THREE.Mesh(starGeometry, starMaterial);
+            polarStar.position.set(x, y, 0);
+            scene.add(polarStar);
+
+            const glowGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffcc,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            polarStar.add(glow);
+        }
+
+        function switchView(viewName) {
+            const viewData = cameraPositions[viewName];
+            animateCameraTo(viewData.pos, viewData.lookAt);
+            
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewName);
+            });
+        }
+
+        function animateCameraTo(targetPos, targetLookAt) {
+            const startPos = camera.position.clone();
+            const endPos = new THREE.Vector3(targetPos[0], targetPos[1], targetPos[2]);
+            const duration = 800;
+            const startTime = Date.now();
+
+            function animateCamera() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                camera.position.lerpVectors(startPos, endPos, eased);
+                camera.lookAt(targetLookAt[0], targetLookAt[1], targetLookAt[2]);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateCamera);
+                }
+            }
+
+            animateCamera();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!isPaused) {
+                earth.rotation.y += 0.008 * animationSpeed;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function setupEventListeners() {
+            // 视角按钮
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    switchView(this.dataset.view);
+                });
+            });
+
+            // 暂停按钮
+            document.getElementById('pause-btn').addEventListener('click', function() {
+                isPaused = !isPaused;
+                this.textContent = isPaused ? '▶' : '⏸';
+                this.classList.toggle('active', isPaused);
+            });
+
+            // 速度按钮
+            document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    animationSpeed = parseFloat(this.dataset.speed);
+                    isPaused = false;
+                    document.getElementById('pause-btn').textContent = '⏸';
+                    document.getElementById('pause-btn').classList.remove('active');
+                    
+                    document.querySelectorAll('.speed-btn[data-speed]').forEach(b => {
+                        b.classList.toggle('active', b === this);
+                    });
+                });
+            });
+        }
+
+        // 知识点弹窗
+        function showKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.add('visible');
+        }
+
+        function hideKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.remove('visible');
+        }
+
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('knowledge-modal');
+            if (e.target === modal) {
+                hideKnowledgeModal();
+            }
+        });
+
+        // 启动
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

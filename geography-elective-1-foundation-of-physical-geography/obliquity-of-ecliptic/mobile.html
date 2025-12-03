@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="screen-orientation" content="landscape">
+    <title>黄赤交角与回归线 - 移动版</title>
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d1b2a 100%);
+            color: #fff;
+        }
+
+        /* ==================== 竖屏提示界面 ==================== */
+        .portrait-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d1b2a 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .portrait-overlay .rotate-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            animation: rotate-hint 2s ease-in-out infinite;
+        }
+
+        @keyframes rotate-hint {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-20deg); }
+            75% { transform: rotate(20deg); }
+        }
+
+        .portrait-overlay h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #ffd54f;
+        }
+
+        .portrait-overlay p {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+            max-width: 300px;
+        }
+
+        .portrait-overlay .home-link {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .portrait-overlay .home-link:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 横屏时隐藏竖屏提示 */
+        @media (orientation: landscape) {
+            .portrait-overlay {
+                display: none !important;
+            }
+        }
+
+        /* 竖屏时隐藏主内容 */
+        @media (orientation: portrait) {
+            .main-container {
+                display: none !important;
+            }
+        }
+
+        /* ==================== 横屏主界面 ==================== */
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        /* 顶部栏 */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.4);
+            flex-shrink: 0;
+        }
+
+        .top-bar .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .top-bar .back-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .top-bar .title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffd54f;
+        }
+
+        .top-bar .help-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(100, 180, 255, 0.8);
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 主内容区 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 3D画布区域 */
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a15 100%);
+        }
+
+        #three-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 右侧控制面板 */
+        .side-panel {
+            width: 150px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .panel-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .panel-section h4 {
+            font-size: 0.7rem;
+            color: #ffd54f;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 节气按钮 */
+        .season-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.7rem;
+            text-align: left;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.2s;
+        }
+
+        .season-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .season-btn.spring { background: linear-gradient(135deg, rgba(102, 187, 106, 0.3), rgba(67, 160, 71, 0.2)); }
+        .season-btn.summer { background: linear-gradient(135deg, rgba(255, 112, 67, 0.3), rgba(230, 74, 25, 0.2)); }
+        .season-btn.autumn { background: linear-gradient(135deg, rgba(255, 183, 77, 0.3), rgba(245, 124, 0, 0.2)); }
+        .season-btn.winter { background: linear-gradient(135deg, rgba(79, 195, 247, 0.3), rgba(2, 136, 209, 0.2)); }
+
+        .season-btn.active {
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .season-btn:active {
+            opacity: 0.8;
+        }
+
+        /* 速度控制 */
+        .speed-control {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .speed-btn {
+            flex: 1;
+            min-width: 36px;
+            padding: 6px 6px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.65rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .speed-btn.active {
+            background: #ffd54f;
+            color: #000;
+        }
+
+        .speed-btn:active {
+            opacity: 0.8;
+        }
+
+        /* 图例 */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 3px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .legend-color.equator { background: #66bb6a; }
+        .legend-color.tropic-n { background: #ff7043; }
+        .legend-color.tropic-s { background: #4fc3f7; }
+        .legend-color.china { background: #ff4444; }
+
+        /* 底部信息栏 */
+        .bottom-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            max-width: 200px;
+        }
+
+        .bottom-info .season-name {
+            color: #ffd54f;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .bottom-info .subsolar {
+            color: #81d4fa;
+            margin-bottom: 2px;
+        }
+
+        .bottom-info .date-ref {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+        }
+
+        /* ==================== 知识点弹窗 ==================== */
+        .knowledge-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .knowledge-modal.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(15, 25, 45, 0.95);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 650px;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .modal-header h3 {
+            font-size: 1rem;
+            color: #ffd54f;
+        }
+
+        .modal-header .close-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 15px;
+        }
+
+        /* 知识卡片 - 横向滚动 */
+        .cards-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 10px;
+        }
+
+        .cards-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .cards-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 100, 0.3);
+            border-radius: 2px;
+        }
+
+        .knowledge-card {
+            flex: 0 0 280px;
+            scroll-snap-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .knowledge-card h4 {
+            font-size: 0.9rem;
+            color: #ffd54f;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .knowledge-card p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .knowledge-card ul {
+            margin-left: 15px;
+            margin-top: 6px;
+        }
+
+        .knowledge-card li {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+            margin-bottom: 3px;
+        }
+
+        .knowledge-card strong {
+            color: #ffd54f;
+        }
+
+        .knowledge-card .formula {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-family: monospace;
+            color: #80ffaa;
+            font-size: 0.75rem;
+        }
+
+        .modal-footer {
+            padding: 10px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 竖屏提示 -->
+    <div class="portrait-overlay">
+        <div class="rotate-icon">📱</div>
+        <h2>请横屏使用</h2>
+        <p>为了获得最佳的3D交互学习体验，请将手机横向放置</p>
+        <a href="../../mobile.html" class="home-link">🏠 返回主页</a>
+    </div>
+
+    <!-- 横屏主界面 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <a href="../../mobile.html" class="back-btn">
+                <span>‹</span> 返回
+            </a>
+            <span class="title">🌍 黄赤交角与回归线</span>
+            <button class="help-btn" onclick="showKnowledgeModal()">?</button>
+        </div>
+
+        <div class="content-area">
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+                
+                <!-- 底部信息 -->
+                <div class="bottom-info">
+                    <div class="season-name" id="current-season">当前：春分</div>
+                    <div class="subsolar">直射点：<span id="subsolar-lat">赤道 (0°)</span></div>
+                    <div class="date-ref" id="date-ref">3月21日左右</div>
+                </div>
+            </div>
+
+            <!-- 右侧控制面板 -->
+            <div class="side-panel">
+                <div class="panel-section">
+                    <h4>🌸 节气</h4>
+                    <button class="season-btn spring active" data-season="spring">🌸 春分</button>
+                    <button class="season-btn summer" data-season="summer">☀️ 夏至</button>
+                    <button class="season-btn autumn" data-season="autumn">🍂 秋分</button>
+                    <button class="season-btn winter" data-season="winter">❄️ 冬至</button>
+                </div>
+
+                <div class="panel-section">
+                    <h4>⚙️ 速度</h4>
+                    <div class="speed-control">
+                        <button class="speed-btn" id="pause-btn">⏸</button>
+                        <button class="speed-btn" data-speed="0.3">慢</button>
+                        <button class="speed-btn active" data-speed="1">中</button>
+                        <button class="speed-btn" data-speed="3">快</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h4>📍 图例</h4>
+                    <div class="legend-item">
+                        <div class="legend-color equator"></div>
+                        <span>赤道 0°</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color tropic-n"></div>
+                        <span>北回归线</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color tropic-s"></div>
+                        <span>南回归线</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color china"></div>
+                        <span>中国</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 知识点弹窗 -->
+    <div class="knowledge-modal" id="knowledge-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 黄赤交角知识点</h3>
+                <button class="close-btn" onclick="hideKnowledgeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="cards-scroll">
+                    <div class="knowledge-card">
+                        <h4>🌍 什么是黄赤交角？</h4>
+                        <p><strong>定义：</strong>地球赤道面与黄道面（公转轨道面）之间的夹角。</p>
+                        <p><strong>数值：</strong>约为23°26′（约23.5°）</p>
+                        <p><strong>意义：</strong>是产生四季变化的根本原因！</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>☀️ 太阳直射点移动</h4>
+                        <p><strong>春分：</strong>3月21日，直射赤道</p>
+                        <p><strong>夏至：</strong>6月22日，直射北回归线</p>
+                        <p><strong>秋分：</strong>9月23日，直射赤道</p>
+                        <p><strong>冬至：</strong>12月22日，直射南回归线</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>📏 回归线的由来</h4>
+                        <p><strong>北回归线：</strong>北纬23.5°，太阳最北位置</p>
+                        <p><strong>南回归线：</strong>南纬23.5°，太阳最南位置</p>
+                        <div class="formula">回归线纬度 = 黄赤交角 ≈ 23.5°</div>
+                        <p>"回归"指太阳到达后就返回</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>🌐 五带的划分</h4>
+                        <p><strong>热带：</strong>23.5°N~23.5°S（有直射）</p>
+                        <p><strong>温带：</strong>23.5°~66.5°（四季明显）</p>
+                        <p><strong>寒带：</strong>66.5°~90°（有极昼夜）</p>
+                        <div class="formula">极圈纬度 = 90° - 23.5° = 66.5°</div>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>🔄 地球运动</h4>
+                        <p><strong>自转：</strong>自西向东，周期约24小时</p>
+                        <p><strong>公转：</strong>自西向东，周期约365.25天</p>
+                        <p><strong>地轴指向：</strong>始终指向北极星方向</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>🇨🇳 中国的位置</h4>
+                        <p><strong>纬度：</strong>约北纬4°～53°</p>
+                        <p><strong>北回归线穿过：</strong>云南、广西、广东、台湾</p>
+                        <p><strong>夏至：</strong>北方白昼最长</p>
+                        <p><strong>冬至：</strong>北方白昼最短</p>
+                    </div>
+
+                    <div class="knowledge-card">
+                        <h4>💡 记忆要点</h4>
+                        <p>• 黄赤交角 = 回归线纬度 ≈ <strong>23.5°</strong></p>
+                        <p>• 极圈纬度 = 90° - 23.5° = <strong>66.5°</strong></p>
+                        <p>• 自转公转方向相同：<strong>自西向东</strong></p>
+                        <p>• 春分秋分：<strong>昼夜等长</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">← 左右滑动查看更多 →</div>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // ============================================
+        // 黄赤交角与回归线 - 移动版
+        // ============================================
+
+        const OBLIQUITY = 23.5;
+        const OBLIQUITY_RAD = OBLIQUITY * Math.PI / 180;
+
+        let scene, camera, renderer;
+        let earth, earthGroup, sun;
+        let orbitAngle = 0;
+        let animationSpeed = 1;
+        let isPaused = false;
+        let subsolarMarker = null;
+
+        const seasons = {
+            spring: { angle: 0, name: '春分', subsolar: '赤道 (0°)', date: '3月21日左右' },
+            summer: { angle: 90, name: '夏至', subsolar: '北回归线 (北纬23.5°)', date: '6月22日左右' },
+            autumn: { angle: 180, name: '秋分', subsolar: '赤道 (0°)', date: '9月23日左右' },
+            winter: { angle: 270, name: '冬至', subsolar: '南回归线 (南纬23.5°)', date: '12月22日左右' }
+        };
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('three-canvas');
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 12, 25);
+            camera.lookAt(0, -2, 0);
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            createStarfield();
+            createSun();
+            createEarth();
+            createOrbit();
+            createPolarStar();
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(onWindowResize, 100);
+            });
+
+            setupEventListeners();
+            animate();
+        }
+
+        function createStarfield() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 800;
+            const positions = new Float32Array(starCount * 3);
+
+            for (let i = 0; i < starCount * 3; i += 3) {
+                const radius = 80 + Math.random() * 80;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                positions[i] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                positions[i + 2] = radius * Math.cos(phi);
+            }
+
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        function createSun() {
+            const sunGeometry = new THREE.SphereGeometry(1.2, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
+            sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            sun.position.set(0, 0, 0);
+            scene.add(sun);
+
+            // 光晕
+            const glowGeometry = new THREE.SphereGeometry(1.6, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffaa00,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            sun.add(glow);
+
+            const sunLight = new THREE.PointLight(0xffffff, 1.5, 100);
+            sun.add(sunLight);
+        }
+
+        function createEarth() {
+            earthGroup = new THREE.Group();
+            scene.add(earthGroup);
+
+            const earthGeometry = new THREE.SphereGeometry(1.8, 64, 64);
+            
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load(
+                'https://unpkg.com/three-globe@2.24.10/example/img/earth-blue-marble.jpg',
+                function() {
+                    addChinaHighlight();
+                }
+            );
+            
+            const earthMaterial = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                specular: new THREE.Color(0x333333),
+                shininess: 15
+            });
+            
+            earth = new THREE.Mesh(earthGeometry, earthMaterial);
+            earth.rotation.x = OBLIQUITY_RAD;
+            earth.renderOrder = 10;
+            earthGroup.add(earth);
+
+            // 大气层
+            const atmosphereGeometry = new THREE.SphereGeometry(1.9, 64, 64);
+            const atmosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4da6ff,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.BackSide
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            atmosphere.rotation.x = OBLIQUITY_RAD;
+            earthGroup.add(atmosphere);
+
+            createEarthAxis();
+            createLatitudeLines();
+            createSubsolarMarker();
+
+            // 初始位置
+            const radius = 12;
+            earthGroup.position.x = radius;
+            earthGroup.position.z = 0;
+        }
+
+        function addChinaHighlight() {
+            const highlightGeometry = new THREE.SphereGeometry(1.806, 64, 64);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const lonToX = (lon) => ((lon + 180) / 360) * canvas.width;
+            const latToY = (lat) => ((90 - lat) / 180) * canvas.height;
+            
+            // 中国区域
+            ctx.fillStyle = 'rgba(255, 50, 50, 0.4)';
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
+            ctx.lineWidth = 4;
+            
+            ctx.beginPath();
+            ctx.moveTo(lonToX(73), latToY(40));
+            ctx.lineTo(lonToX(80), latToY(45));
+            ctx.lineTo(lonToX(87), latToY(49));
+            ctx.lineTo(lonToX(97), latToY(47));
+            ctx.lineTo(lonToX(105), latToY(42));
+            ctx.lineTo(lonToX(112), latToY(45));
+            ctx.lineTo(lonToX(120), latToY(50));
+            ctx.lineTo(lonToX(127), latToY(53));
+            ctx.lineTo(lonToX(135), latToY(49));
+            ctx.lineTo(lonToX(134), latToY(45));
+            ctx.lineTo(lonToX(128), latToY(42));
+            ctx.lineTo(lonToX(124), latToY(40));
+            ctx.lineTo(lonToX(122), latToY(32));
+            ctx.lineTo(lonToX(121), latToY(28));
+            ctx.lineTo(lonToX(120), latToY(24));
+            ctx.lineTo(lonToX(117), latToY(23));
+            ctx.lineTo(lonToX(110), latToY(18));
+            ctx.lineTo(lonToX(106), latToY(22));
+            ctx.lineTo(lonToX(100), latToY(22));
+            ctx.lineTo(lonToX(97), latToY(28));
+            ctx.lineTo(lonToX(92), latToY(27));
+            ctx.lineTo(lonToX(84), latToY(28));
+            ctx.lineTo(lonToX(79), latToY(30));
+            ctx.lineTo(lonToX(74), latToY(35));
+            ctx.lineTo(lonToX(73), latToY(40));
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const highlightMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthWrite: false
+            });
+            
+            const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+            earth.add(highlight);
+        }
+
+        function createEarthAxis() {
+            const axisLength = 4;
+            
+            const axisGeometry = new THREE.CylinderGeometry(0.03, 0.03, axisLength * 2, 8);
+            const axisMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.9, transparent: true });
+            const axis = new THREE.Mesh(axisGeometry, axisMaterial);
+            earth.add(axis);
+
+            const northArrowGeometry = new THREE.ConeGeometry(0.12, 0.3, 8);
+            const northArrowMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            const northArrow = new THREE.Mesh(northArrowGeometry, northArrowMaterial);
+            northArrow.position.set(0, axisLength + 0.15, 0);
+            earth.add(northArrow);
+        }
+
+        function createLatitudeLines() {
+            createLatitudeLine(0, 0x66bb6a, 2);
+            createLatitudeLine(OBLIQUITY, 0xff7043, 1.5);
+            createLatitudeLine(-OBLIQUITY, 0x4fc3f7, 1.5);
+        }
+
+        function createLatitudeLine(latitude, color, thickness) {
+            const latRad = latitude * Math.PI / 180;
+            const radius = 1.83 * Math.cos(latRad);
+            const y = 1.83 * Math.sin(latRad);
+
+            const segments = 64;
+            const points = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(
+                    radius * Math.cos(theta),
+                    y,
+                    radius * Math.sin(theta)
+                ));
+            }
+
+            const curve = new THREE.CatmullRomCurve3(points, true);
+            const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.015 * thickness, 8, true);
+            const tubeMaterial = new THREE.MeshBasicMaterial({ color: color, opacity: 0.85, transparent: true });
+            
+            const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+            earth.add(tube);
+        }
+
+        function createSubsolarMarker() {
+            const markerGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+            const markerMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.9
+            });
+            subsolarMarker = new THREE.Mesh(markerGeometry, markerMaterial);
+            scene.add(subsolarMarker);
+            
+            const glowGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff6600,
+                transparent: true,
+                opacity: 0.5
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            subsolarMarker.add(glow);
+        }
+
+        function createOrbit() {
+            const orbitRadius = 12;
+            const segments = 128;
+            const points = [];
+
+            for (let i = 0; i <= segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(
+                    orbitRadius * Math.cos(theta),
+                    0,
+                    orbitRadius * Math.sin(theta)
+                ));
+            }
+
+            const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const orbitMaterial = new THREE.LineDashedMaterial({
+                color: 0x666666,
+                dashSize: 0.4,
+                gapSize: 0.2
+            });
+            
+            const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
+            orbitLine.computeLineDistances();
+            scene.add(orbitLine);
+
+            // 节气标记
+            addSeasonMarkers(orbitRadius);
+        }
+
+        function addSeasonMarkers(radius) {
+            const seasonData = [
+                { angle: 0, label: '春', color: 0x66bb6a },
+                { angle: 90, label: '夏', color: 0xff7043 },
+                { angle: 180, label: '秋', color: 0xffb74d },
+                { angle: 270, label: '冬', color: 0x4fc3f7 }
+            ];
+
+            seasonData.forEach(season => {
+                const theta = season.angle * Math.PI / 180;
+                const x = radius * Math.cos(theta);
+                const z = radius * Math.sin(theta);
+
+                const markerGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+                const markerMaterial = new THREE.MeshBasicMaterial({ color: season.color });
+                const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                marker.position.set(x, 0, z);
+                scene.add(marker);
+            });
+        }
+
+        function createPolarStar() {
+            const distance = 35;
+            const y = distance * Math.cos(OBLIQUITY_RAD);
+            const z = -distance * Math.sin(OBLIQUITY_RAD);
+
+            const starGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+            const polarStar = new THREE.Mesh(starGeometry, starMaterial);
+            polarStar.position.set(0, y, z);
+            scene.add(polarStar);
+
+            const glowGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffcc,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            polarStar.add(glow);
+        }
+
+        function updateOrbitPosition(angle) {
+            orbitAngle = angle;
+            const theta = angle * Math.PI / 180;
+            const radius = 12;
+            
+            earthGroup.position.x = radius * Math.cos(theta);
+            earthGroup.position.z = radius * Math.sin(theta);
+
+            // 更新直射点
+            if (subsolarMarker) {
+                const earthPos = earthGroup.position.clone();
+                const direction = earthPos.clone().normalize().negate();
+                const markerPos = earthPos.clone().add(direction.clone().multiplyScalar(-1.85));
+                subsolarMarker.position.copy(markerPos);
+            }
+
+            updateInfoPanel(angle);
+        }
+
+        function updateInfoPanel(angle) {
+            const subsolarLat = OBLIQUITY * Math.sin(angle * Math.PI / 180);
+            
+            let seasonName = '';
+            let dateRef = '';
+            
+            if (angle >= 350 || angle < 10) {
+                seasonName = '春分';
+                dateRef = '3月21日左右';
+            } else if (angle >= 10 && angle < 80) {
+                seasonName = '春分→夏至';
+                dateRef = '3月~6月';
+            } else if (angle >= 80 && angle < 100) {
+                seasonName = '夏至';
+                dateRef = '6月22日左右';
+            } else if (angle >= 100 && angle < 170) {
+                seasonName = '夏至→秋分';
+                dateRef = '6月~9月';
+            } else if (angle >= 170 && angle < 190) {
+                seasonName = '秋分';
+                dateRef = '9月23日左右';
+            } else if (angle >= 190 && angle < 260) {
+                seasonName = '秋分→冬至';
+                dateRef = '9月~12月';
+            } else if (angle >= 260 && angle < 280) {
+                seasonName = '冬至';
+                dateRef = '12月22日左右';
+            } else {
+                seasonName = '冬至→春分';
+                dateRef = '12月~次年3月';
+            }
+
+            document.getElementById('current-season').textContent = `当前：${seasonName}`;
+            
+            let latText = '';
+            if (Math.abs(subsolarLat) < 0.5) {
+                latText = '赤道 (0°)';
+            } else if (subsolarLat > 0) {
+                latText = Math.abs(subsolarLat - OBLIQUITY) < 1 ? '北回归线 (北纬23.5°)' : `北纬 ${subsolarLat.toFixed(1)}°`;
+            } else {
+                latText = Math.abs(subsolarLat + OBLIQUITY) < 1 ? '南回归线 (南纬23.5°)' : `南纬 ${Math.abs(subsolarLat).toFixed(1)}°`;
+            }
+            
+            document.getElementById('subsolar-lat').textContent = latText;
+            document.getElementById('date-ref').textContent = dateRef;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!isPaused) {
+                earth.rotation.y += 0.008 * animationSpeed;
+                
+                orbitAngle += 0.08 * animationSpeed;
+                if (orbitAngle >= 360) orbitAngle -= 360;
+                
+                updateOrbitPosition(orbitAngle);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function setupEventListeners() {
+            // 节气按钮
+            document.querySelectorAll('.season-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const season = this.dataset.season;
+                    const data = seasons[season];
+                    
+                    document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    updateOrbitPosition(data.angle);
+                });
+            });
+
+            // 暂停按钮
+            document.getElementById('pause-btn').addEventListener('click', function() {
+                isPaused = !isPaused;
+                this.textContent = isPaused ? '▶' : '⏸';
+                this.classList.toggle('active', isPaused);
+            });
+
+            // 速度按钮
+            document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    animationSpeed = parseFloat(this.dataset.speed);
+                    isPaused = false;
+                    document.getElementById('pause-btn').textContent = '⏸';
+                    document.getElementById('pause-btn').classList.remove('active');
+                    
+                    document.querySelectorAll('.speed-btn[data-speed]').forEach(b => {
+                        b.classList.toggle('active', b === this);
+                    });
+                });
+            });
+        }
+
+        // 知识点弹窗
+        function showKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.add('visible');
+        }
+
+        function hideKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.remove('visible');
+        }
+
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('knowledge-modal');
+            if (e.target === modal) {
+                hideKnowledgeModal();
+            }
+        });
+
+        // 启动
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
