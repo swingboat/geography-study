@@ -353,9 +353,28 @@
         <footer>
             <p>
                 🌏 地理学习交互式教学平台 | 
+                <a href="mobile.html">📱 移动版</a> | 
                 <a href="https://github.com/swingboat/geography-study" target="_blank">GitHub</a>
             </p>
         </footer>
     </div>
+
+    <script>
+        // 检测移动设备并提示跳转
+        (function() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isSmallScreen = window.innerWidth <= 768;
+            const dismissed = localStorage.getItem('mobileRedirectDismissed');
+            
+            if ((isMobile || isSmallScreen) && !dismissed) {
+                const shouldRedirect = confirm('检测到您正在使用移动设备，是否跳转到移动版页面？\n\n移动版针对手机屏幕优化，体验更佳。');
+                if (shouldRedirect) {
+                    window.location.href = 'mobile.html';
+                } else {
+                    localStorage.setItem('mobileRedirectDismissed', 'true');
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
