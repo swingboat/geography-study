@@ -621,6 +621,7 @@
         let animationSpeed = 1;
         let isPaused = false;
         let subsolarMarker = null;
+        let sunRays = [];  // 太阳光线数组
 
         const seasons = {
             spring: { angle: 0, name: '春分', subsolar: '赤道 (0°)', date: '3月21日左右' },
@@ -872,7 +873,8 @@
         }
 
         function createSubsolarMarker() {
-            const markerGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+            // 创建直射点标记
+            const markerGeometry = new THREE.SphereGeometry(0.15, 16, 16);
             const markerMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xff0000,
                 transparent: true,
@@ -881,7 +883,8 @@
             subsolarMarker = new THREE.Mesh(markerGeometry, markerMaterial);
             scene.add(subsolarMarker);
             
-            const glowGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            // 直射点外围发光
+            const glowGeometry = new THREE.SphereGeometry(0.25, 16, 16);
             const glowMaterial = new THREE.MeshBasicMaterial({
                 color: 0xff6600,
                 transparent: true,
@@ -889,6 +892,64 @@
             });
             const glow = new THREE.Mesh(glowGeometry, glowMaterial);
             subsolarMarker.add(glow);
+            
+            // 创建太阳光线
+            createSunRays();
+        }
+        
+        function createSunRays() {
+            // 创建多条光线表示太阳光
+            const rayCount = 5;
+            for (let i = 0; i < rayCount; i++) {
+                const rayGeometry = new THREE.BufferGeometry();
+                const rayPositions = new Float32Array(6);
+                rayGeometry.setAttribute('position', new THREE.BufferAttribute(rayPositions, 3));
+                
+                const opacity = i === 2 ? 0.9 : 0.4; // 中间的光线最亮
+                const rayMaterial = new THREE.LineBasicMaterial({
+                    color: 0xffff00,
+                    transparent: true,
+                    opacity: opacity,
+                    linewidth: 2
+                });
+                
+                const ray = new THREE.Line(rayGeometry, rayMaterial);
+                ray.userData.rayIndex = i;
+                scene.add(ray);
+                sunRays.push(ray);
+            }
+        }
+        
+        function updateSunRays() {
+            if (sunRays.length === 0 || !earthGroup || !sun) return;
+            
+            const earthPos = earthGroup.position.clone();
+            const sunPos = sun.position.clone();
+            
+            // 计算方向
+            const direction = earthPos.clone().sub(sunPos).normalize();
+            
+            // 更新每条光线
+            sunRays.forEach((ray, index) => {
+                // 光线起点（太阳表面附近）
+                const offset = (index - 2) * 0.5; // -1, -0.5, 0, 0.5, 1
+                const perpendicular = new THREE.Vector3(0, 1, 0);
+                const startOffset = perpendicular.clone().multiplyScalar(offset);
+                const startPoint = sunPos.clone().add(direction.clone().multiplyScalar(1.8)).add(startOffset);
+                
+                // 光线终点（地球表面附近）
+                const endOffset = perpendicular.clone().multiplyScalar(offset * 0.3);
+                const endPoint = earthPos.clone().add(direction.clone().multiplyScalar(-1.9)).add(endOffset);
+                
+                const positions = ray.geometry.attributes.position.array;
+                positions[0] = startPoint.x;
+                positions[1] = startPoint.y;
+                positions[2] = startPoint.z;
+                positions[3] = endPoint.x;
+                positions[4] = endPoint.y;
+                positions[5] = endPoint.z;
+                ray.geometry.attributes.position.needsUpdate = true;
+            });
         }
 
         function createOrbit() {
@@ -970,13 +1031,16 @@
             earthGroup.position.x = radius * Math.cos(theta);
             earthGroup.position.z = radius * Math.sin(theta);
 
-            // 更新直射点
+            // 更新直射点位置
             if (subsolarMarker) {
                 const earthPos = earthGroup.position.clone();
                 const direction = earthPos.clone().normalize().negate();
                 const markerPos = earthPos.clone().add(direction.clone().multiplyScalar(-1.85));
                 subsolarMarker.position.copy(markerPos);
             }
+            
+            // 更新太阳光线
+            updateSunRays();
 
             updateInfoPanel(angle);
         }
