@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>黄赤交角与回归线 - 交互式教学</title>
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d1b2a 100%);
+            color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        header {
+            flex-shrink: 0;
+            text-align: center;
+            padding: 6px 15px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            white-space: nowrap;
+            text-shadow: 0 0 20px rgba(255, 200, 100, 0.5);
+        }
+
+        .main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a15 100%);
+        }
+
+        #three-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 信息显示面板 */
+        #info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 10;
+        }
+
+        #info-panel .season {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #ffd54f;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #info-panel .subsolar-point {
+            color: #81d4fa;
+        }
+        
+        #info-panel .motion-info {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #info-panel .motion-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 3px 0;
+        }
+        
+        #info-panel .motion-icon {
+            font-size: 0.9rem;
+        }
+        
+        #info-panel .orbit-info {
+            color: #80ffaa;
+        }
+        
+        #info-panel .rotation-info {
+            color: #ffcc66;
+        }
+
+        /* 左下角图例 */
+        .corner-legend {
+            position: absolute;
+            bottom: 70px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 50;
+        }
+        
+        .corner-legend h4 {
+            color: #ffd54f;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .corner-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            color: #ccc;
+        }
+        
+        .corner-legend .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        .corner-legend .legend-color.equator { background: #66bb6a; }
+        .corner-legend .legend-color.tropic-n { background: #ff7043; }
+        .corner-legend .legend-color.tropic-s { background: #4fc3f7; }
+        .corner-legend .legend-color.china { background: #ff4444; }
+        
+        /* 右下角动画控制 */
+        .corner-controls {
+            position: absolute;
+            bottom: 70px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 50;
+        }
+        
+        .corner-controls h4 {
+            color: #ffd54f;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .corner-controls .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .corner-controls .slider-row label {
+            color: #aaa;
+            white-space: nowrap;
+            font-size: 0.7rem;
+        }
+        
+        .corner-controls input[type="range"] {
+            width: 80px;
+            height: 4px;
+        }
+        
+        .corner-controls .speed-btns {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .corner-controls .speed-btns button {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: background 0.3s;
+        }
+        
+        .corner-controls .speed-btns button:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .corner-controls .speed-btns button.active {
+            background: #ffd54f;
+            color: #000;
+        }
+        
+        /* 右下角视角说明 */
+        .corner-view-info {
+            position: absolute;
+            bottom: 170px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(100, 180, 255, 0.3);
+            z-index: 50;
+        }
+        
+        .corner-view-info h4 {
+            color: #64b4ff;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .corner-view-info .view-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 4px 0;
+            color: #ccc;
+        }
+        
+        .corner-view-info .view-item .view-icon {
+            font-size: 0.85rem;
+            width: 18px;
+            text-align: center;
+        }
+        
+        .corner-view-info .view-item.motion {
+            color: #88ffaa;
+        }
+        
+        .corner-view-info .view-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 8px 0;
+        }
+        
+        /* 底部节气选择器 */
+        .bottom-season-bar {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 8px 15px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 50;
+        }
+        
+        .bottom-season-bar .season-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+        
+        .bottom-season-bar .season-btn.spring {
+            background: linear-gradient(135deg, #66bb6a, #43a047);
+        }
+        .bottom-season-bar .season-btn.summer {
+            background: linear-gradient(135deg, #ff7043, #e64a19);
+        }
+        .bottom-season-bar .season-btn.autumn {
+            background: linear-gradient(135deg, #ffb74d, #f57c00);
+        }
+        .bottom-season-bar .season-btn.winter {
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+        }
+        
+        .bottom-season-bar .season-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .bottom-season-bar .season-btn.active {
+            box-shadow: 0 0 0 2px #fff;
+        }
+
+        .legend-color.tropic-s {
+            background: #4fc3f7;
+        }
+
+        .legend-color.axis {
+            background: #fff;
+            height: 2px;
+            border: 1px dashed #fff;
+        }
+
+        .legend-color.china {
+            background: linear-gradient(135deg, #ff5555, #ff8888);
+            border-radius: 2px;
+        }
+
+        .legend-color.rotation {
+            background: #ffcc00;
+        }
+
+        .legend-color.orbit {
+            background: #00ff88;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            max-width: 250px;
+            line-height: 1.6;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+        
+        /* 帮助按钮 */
+        .help-btn {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(100, 180, 255, 0.9);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .help-btn:hover {
+            transform: scale(1.1);
+            background: #64b4ff;
+        }
+        
+        /* 知识点弹窗 - 现代透明卡片风格 */
+        .knowledge-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        
+        .knowledge-modal.visible {
+            display: flex;
+        }
+        
+        .knowledge-modal-content {
+            background: rgba(15, 25, 45, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .knowledge-modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .knowledge-modal-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        .knowledge-modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 100, 0.3);
+            border-radius: 3px;
+        }
+        
+        .knowledge-modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 200, 100, 0.5);
+        }
+        
+        .knowledge-modal-content h2 {
+            color: #fff;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            background: linear-gradient(135deg, #ffd54f, #ffb74d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .knowledge-modal-content .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .knowledge-modal-content .close-btn:hover {
+            background: rgba(255, 100, 100, 0.3);
+            border-color: rgba(255, 100, 100, 0.5);
+            transform: rotate(90deg);
+        }
+        
+        /* 知识卡片轮播布局 */
+        .knowledge-cards-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .knowledge-cards-grid {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding: 10px 5px 20px 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .knowledge-cards-grid::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .knowledge-cards-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        .knowledge-cards-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 100, 0.3);
+            border-radius: 3px;
+        }
+        
+        .knowledge-cards-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 200, 100, 0.5);
+        }
+        
+        .knowledge-item {
+            flex: 0 0 340px;
+            scroll-snap-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .knowledge-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ffd54f, #ff7043, #4fc3f7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .knowledge-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .knowledge-item:hover::before {
+            opacity: 1;
+        }
+        
+        .knowledge-item h4 {
+            color: #fff;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .knowledge-item h4 .icon {
+            font-size: 1.2rem;
+        }
+        
+        .knowledge-item p {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.85rem;
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+        
+        .knowledge-item p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .knowledge-item p strong {
+            color: #ffd54f;
+            font-weight: 500;
+        }
+        
+        /* 特殊卡片样式 - 记忆要点 */
+        .knowledge-item.highlight-card {
+            background: linear-gradient(135deg, rgba(255, 213, 79, 0.1), rgba(255, 152, 0, 0.05));
+            border-color: rgba(255, 213, 79, 0.2);
+        }
+        
+        .knowledge-item.highlight-card h4 {
+            color: #ffd54f;
+        }
+        
+        .knowledge-item.highlight-card p {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .knowledge-item.highlight-card p::before {
+            content: '✦';
+            color: #ffd54f;
+            flex-shrink: 0;
+        }
+        
+        /* 轮播导航指示器 */
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+        
+        .carousel-nav .nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-nav .nav-btn:hover {
+            background: rgba(255, 213, 79, 0.3);
+            border-color: rgba(255, 213, 79, 0.5);
+        }
+        
+        .carousel-nav .nav-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .carousel-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .carousel-dots .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-dots .dot.active {
+            background: #ffd54f;
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        .carousel-dots .dot:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .swipe-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .knowledge-modal-content {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            
+            .knowledge-item {
+                flex: 0 0 280px;
+                padding: 16px;
+            }
+            
+            .carousel-nav .nav-btn {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 黄赤交角与回归线 🌞</h1>
+        </header>
+
+        <div class="main-content">
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+                <div id="info-panel">
+                    <div class="season" id="current-season">当前：春分</div>
+                    <div class="subsolar-point">直射点：<span id="subsolar-lat">赤道 (0°)</span></div>
+                    <div>日期：<span id="date-ref">3月21日</span></div>
+                    <div class="motion-info">
+                        <div class="motion-item orbit-info">
+                            <span class="motion-icon">🔄</span>
+                            <span>公转：逆时针（俯视北极）</span>
+                        </div>
+                        <div class="motion-item rotation-info">
+                            <span class="motion-icon">🌀</span>
+                            <span>自转：自西向东</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 左下角图例 -->
+                <div class="corner-legend">
+                    <h4>📍 图例</h4>
+                    <div class="legend-item">
+                        <div class="legend-color equator"></div>
+                        <span>赤道 (0°)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color tropic-n"></div>
+                        <span>北回归线 (23.5°N)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color tropic-s"></div>
+                        <span>南回归线 (23.5°S)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color china"></div>
+                        <span>中国位置</span>
+                    </div>
+                </div>
+                
+                <!-- 右下角动画控制 -->
+                <div class="corner-controls">
+                    <h4>▶ 动画控制</h4>
+                    <div class="slider-row">
+                        <label>公转</label>
+                        <input type="range" id="orbit-slider" min="0" max="360" value="0">
+                    </div>
+                    <div class="speed-btns">
+                        <button id="pause-btn">暂停</button>
+                        <button id="slow-btn">慢</button>
+                        <button id="normal-btn" class="active">正常</button>
+                        <button id="fast-btn">快</button>
+                    </div>
+                </div>
+                
+                <!-- 右下角视角说明 -->
+                <div class="corner-view-info">
+                    <h4>👁 观察视角</h4>
+                    <div class="view-item">
+                        <span class="view-icon">🌌</span>
+                        <span>北半球上空斜视</span>
+                    </div>
+                    <div class="view-item">
+                        <span class="view-icon">⬆</span>
+                        <span>上方为北极星方向</span>
+                    </div>
+                    <div class="view-divider"></div>
+                    <div class="view-item motion">
+                        <span class="view-icon">🔄</span>
+                        <span>公转：逆时针</span>
+                    </div>
+                    <div class="view-item motion">
+                        <span class="view-icon">🌀</span>
+                        <span>自转：自西向东</span>
+                    </div>
+                </div>
+                
+                <!-- 底部节气选择器 -->
+                <div class="bottom-season-bar">
+                    <button class="season-btn spring active" data-season="spring">🌸 春分</button>
+                    <button class="season-btn summer" data-season="summer">☀️ 夏至</button>
+                    <button class="season-btn autumn" data-season="autumn">🍂 秋分</button>
+                    <button class="season-btn winter" data-season="winter">❄️ 冬至</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 帮助按钮 -->
+    <button class="help-btn" onclick="showKnowledgeModal()" title="查看详细说明">?</button>
+
+    <!-- 知识点弹窗 -->
+    <div class="knowledge-modal" id="knowledge-modal">
+        <div class="knowledge-modal-content">
+            <button class="close-btn" onclick="hideKnowledgeModal()">×</button>
+            <h2>📚 黄赤交角与回归线 - 完整知识说明</h2>
+            
+            <div class="knowledge-cards-container">
+                <div class="knowledge-cards-grid" id="knowledge-carousel">
+                    <div class="knowledge-item">
+                        <h4><span class="icon">🌍</span> 什么是黄赤交角？</h4>
+                        <p><strong>定义：</strong>黄赤交角是地球赤道面与黄道面（地球公转轨道面）之间的夹角，也等于地轴与黄道面法线的夹角。</p>
+                <p><strong>数值：</strong>约为23°26′（约23.5°），不是固定不变的，在22.1°到24.5°之间缓慢变化，周期约4.1万年。</p>
+                <p><strong>意义：</strong>黄赤交角的存在是地球上产生四季变化的根本原因！</p>
+            </div>
+                
+                <div class="knowledge-item">
+                    <h4><span class="icon">🔄</span> 地球的自转</h4>
+                <p><strong>方向：</strong>自西向东（从北极上空俯视为逆时针）</p>
+                <p><strong>周期：</strong>约23小时56分04秒（一个恒星日）</p>
+                <p><strong>意义：</strong>产生昼夜交替现象，决定了地方时和时区。</p>
+            </div>
+                
+                <div class="knowledge-item">
+                    <h4><span class="icon">💫</span> 地球的公转</h4>
+                <p><strong>方向：</strong>自西向东（从北极上空俯视为逆时针），与自转方向相同</p>
+                <p><strong>周期：</strong>约365.25天（一个回归年）</p>
+                <p><strong>特点：</strong>地轴始终指向北极星方向，与黄道面保持66.5°夹角。</p>
+            </div>
+                
+                <div class="knowledge-item">
+                    <h4><span class="icon">☀️</span> 太阳直射点的移动规律</h4>
+                <p><strong>春分（3月21日左右）：</strong>太阳直射赤道，全球昼夜等长。</p>
+                <p><strong>夏至（6月22日左右）：</strong>太阳直射北回归线，北半球白昂最长。</p>
+                <p><strong>秋分（9月23日左右）：</strong>太阳直射赤道，全球昼夜等长。</p>
+                <p><strong>冬至（12月22日左右）：</strong>太阳直射南回归线，北半球白昂最短。</p>
+            </div>
+                
+                <div class="knowledge-item">
+                    <h4><span class="icon">📏</span> 回归线的由来</h4>
+                <p><strong>北回归线：</strong>位于北纬23.5°，是太阳直射点能到达的最北位置。</p>
+                <p><strong>南回归线：</strong>位于南纬23.5°，是太阳直射点能到达的最南位置。</p>
+                <p><strong>数学关系：</strong>回归线的纬度 = 黄赤交角的度数！</p>
+                <p><strong>名称由来：</strong>“回归”指太阳直射点到达该纬度后就会“返回”，不再继续向极地移动。</p>
+            </div>
+                
+                <div class="knowledge-item">
+                    <h4><span class="icon">🌐</span> 五带的划分</h4>
+                <p><strong>热带：</strong>南北回归线之间（23.5°N ~ 23.5°S），有太阳直射现象。</p>
+                <p><strong>北温带：</strong>北回归线到北极圈之间（23.5°N ~ 66.5°N）。</p>
+                <p><strong>南温带：</strong>南回归线到南极圈之间（23.5°S ~ 66.5°S）。</p>
+                <p><strong>北寒带：</strong>北极圈以北（66.5°N ~ 90°N），有极昂极夜现象。</p>
+                <p><strong>南寒带：</strong>南极圈以南（66.5°S ~ 90°S），有极昂极夜现象。</p>
+            </div>
+                
+                <div class="knowledge-item">
+                    <h4><span class="icon">🇨🇳</span> 中国的位置</h4>
+                <p><strong>纬度范围：</strong>约北纬4°～53°，大部分位于北温带。</p>
+                <p><strong>北回归线穿过：</strong>云南、广西、广东、台湾四省区。</p>
+                <p><strong>夏至日特点：</strong>北回归线以北地区白昂最长，是全年白天最长的一天。</p>
+                <p><strong>冬至日特点：</strong>北回归线以北地区白昂最短，是全年白天最短的一天。</p>
+            </div>
+                
+                <div class="knowledge-item highlight-card">
+                    <h4><span class="icon">💡</span> 记忆要点</h4>
+                <p>黄赤交角 = 回归线纬度 ≈ 23.5°</p>
+                <p>极圈纬度 = 90° - 黄赤交角 ≈ 66.5°</p>
+                <p>地球自转、公转方向相同：自西向东</p>
+                <p>地轴始终指向北极星方向，与黄道面成66.5°角</p>
+                <p>春分秋分：全球昼夜等长；夏至冬至：昼夜差异最大</p>
+                </div>
+            </div>
+            
+            <div class="carousel-nav">
+                <button class="nav-btn" id="carousel-prev">‹</button>
+                <div class="carousel-dots" id="carousel-dots"></div>
+                <button class="nav-btn" id="carousel-next">›</button>
+            </div>
+            <div class="swipe-hint">← 左右滑动查看更多 →</div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- Three.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // ============================================
+        // 黄赤交角与回归线 - 交互式教学动画
+        // ============================================
+
+        // 全局常量定义
+        const OBLIQUITY = 23.5; // 黄赤交角度数
+        const OBLIQUITY_RAD = OBLIQUITY * Math.PI / 180; // 黄赤交角弧度
+
+        // 场景变量
+        let scene, camera, renderer;
+        let earth, earthGroup, sun, polarStar;
+        let orbitLine, sunRay;
+        let earthRotation = 0;
+        let orbitAngle = 0; // 0=春分, 90=夏至, 180=秋分, 270=冬至
+        let animationSpeed = 1;
+        let isPaused = false;
+
+        // 节气数据
+        const seasons = {
+            spring: { angle: 0, name: '春分', subsolar: '赤道 (0°)', date: '3月21日左右' },
+            summer: { angle: 90, name: '夏至', subsolar: '北回归线 (北纬23.5°)', date: '6月22日左右' },
+            autumn: { angle: 180, name: '秋分', subsolar: '赤道 (0°)', date: '9月23日左右' },
+            winter: { angle: 270, name: '冬至', subsolar: '南回归线 (南纬23.5°)', date: '12月22日左右' }
+        };
+
+        // ============================================
+        // 初始化场景
+        // ============================================
+        function init() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('three-canvas');
+
+            // 创建场景
+            scene = new THREE.Scene();
+
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(
+                45,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            // 调整视角：相机看向场景下方，使整个轨道系统在画面中上移
+            camera.position.set(0, 10, 28);
+            camera.lookAt(0, -3, 0);
+
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // 创建场景元素
+            createStarfield();
+            createSun();
+            createEarth();
+            createOrbit();
+            createPolarStar();
+            createSunRay();
+            createLabels();
+
+            // 添加光照
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            // 窗口大小调整
+            window.addEventListener('resize', onWindowResize);
+
+            // 开始动画
+            animate();
+        }
+
+        // ============================================
+        // 创建星空背景
+        // ============================================
+        function createStarfield() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 2000;
+            const positions = new Float32Array(starCount * 3);
+
+            for (let i = 0; i < starCount * 3; i += 3) {
+                const radius = 100 + Math.random() * 100;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                positions[i] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                positions[i + 2] = radius * Math.cos(phi);
+            }
+
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        // ============================================
+        // 创建太阳
+        // ============================================
+        function createSun() {
+            // 太阳球体
+            const sunGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffdd00,
+                transparent: true,
+                opacity: 1
+            });
+            sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            sun.position.set(0, 0, 0);
+            scene.add(sun);
+
+            // 太阳光晕
+            const glowGeometry = new THREE.SphereGeometry(2.1, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffaa00,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            sun.add(glow);
+
+            // 太阳点光源
+            const sunLight = new THREE.PointLight(0xffffff, 1.5, 100);
+            sun.add(sunLight);
+
+            // 太阳标签（调整位置）
+            addTextSprite('太阳', sun.position.clone().add(new THREE.Vector3(0, 2.5, 0)), 0xffdd00);
+        }
+
+        // ============================================
+        // 创建地球（带有地轴、回归线等）
+        // ============================================
+        function createEarth() {
+            // 地球组（用于公转）
+            earthGroup = new THREE.Group();
+            scene.add(earthGroup);
+
+            // 地球本体
+            const earthGeometry = new THREE.SphereGeometry(2, 64, 64);
+            
+            // 使用NASA真实地球纹理
+            const textureLoader = new THREE.TextureLoader();
+            
+            // 加载真实地球纹理图片
+            const earthTexture = textureLoader.load(
+                'https://unpkg.com/three-globe@2.24.10/example/img/earth-blue-marble.jpg',
+                function(texture) {
+                    // 纹理加载完成后，添加中国高亮覆盖层
+                    addChinaHighlightOverlay();
+                }
+            );
+            
+            // 加载凹凸贴图（地形起伏）
+            const bumpTexture = textureLoader.load(
+                'https://unpkg.com/three-globe@2.24.10/example/img/earth-topology.png'
+            );
+            
+            // 加载高光贴图（水面反光）
+            const specTexture = textureLoader.load(
+                'https://unpkg.com/three-globe@2.24.10/example/img/earth-water.png'
+            );
+            
+            const earthMaterial = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                bumpMap: bumpTexture,
+                bumpScale: 0.1,
+                specularMap: specTexture,
+                specular: new THREE.Color(0x333333),
+                shininess: 15
+            });
+            
+            earth = new THREE.Mesh(earthGeometry, earthMaterial);
+            
+            // 应用黄赤交角倾斜（地轴倾斜）
+            // 地轴指向北极星，北极星在 (0, y, -z) 方向
+            // 需要让地球的本地Y轴（北极方向）指向北极星
+            // 使用 rotation.x 使地轴在 Y-Z 平面内向 -Z 方向倾斜
+            earth.rotation.x = OBLIQUITY_RAD;
+            
+            // 设置较高的渲染优先级，确保地球不会被其他元素遮挡
+            earth.renderOrder = 10;
+            
+            earthGroup.add(earth);
+            
+            // 添加大气层效果
+            createAtmosphere();
+            
+            // 添加云层
+            createCloudLayer();
+
+            // 绘制地轴
+            createEarthAxis();
+            
+            // 绘制赤道和回归线
+            createLatitudeLines();
+            
+            // 添加自转方向标签（添加到earthGroup，不随地球自转）
+            createRotationLabel();
+            
+            // 添加中国位置标记
+            createChinaMarker();
+
+            // 设置初始位置（不调用updateOrbitPosition，避免sunRay未初始化的问题）
+            const theta = 0; // 春分点
+            const radius = 15;
+            earthGroup.position.x = radius * Math.cos(theta);
+            earthGroup.position.z = radius * Math.sin(theta);
+        }
+        
+        // ============================================
+        // 创建云层
+        // ============================================
+        function createCloudLayer() {
+            const textureLoader = new THREE.TextureLoader();
+            const cloudTexture = textureLoader.load(
+                'https://unpkg.com/three-globe@2.24.10/example/img/earth-clouds.png'
+            );
+            
+            const cloudGeometry = new THREE.SphereGeometry(2.05, 64, 64);
+            const cloudMaterial = new THREE.MeshPhongMaterial({
+                map: cloudTexture,
+                transparent: true,
+                opacity: 0.35,
+                depthWrite: false
+            });
+            
+            const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
+            clouds.rotation.x = OBLIQUITY_RAD;
+            clouds.renderOrder = 11; // 在地球之上
+            earth.userData.clouds = clouds;
+            earthGroup.add(clouds);
+        }
+        
+        // ============================================
+        // 添加中国高亮覆盖层
+        // ============================================
+        function addChinaHighlightOverlay() {
+            // 创建一个覆盖在地球上的高亮层，标识中国位置
+            const highlightGeometry = new THREE.SphereGeometry(2.006, 64, 64);
+            
+            // 创建中国区域高亮的canvas纹理
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            
+            // 透明背景
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Three.js SphereGeometry 的UV映射：
+            // U轴：从左到右对应经度从-180°到+180°（或者说从180°W到180°E）
+            // V轴：从上到下对应纬度从+90°到-90°（北极到南极）
+            // 
+            // 但是Three.js的球体在3D空间中，经度0°对应的是-Z轴方向
+            // 我们需要将canvas的经度也按这个方式映射
+            
+            // 修正：Three.js SphereGeometry的phiStart默认为0，从+X轴开始
+            // UV的U从0开始对应phiStart位置
+            // 所以我们需要将经度映射考虑这个偏移
+            
+            const lonToX = (lon) => {
+                // 将经度转换为canvas X坐标
+                // NASA纹理：-180°在左边缘，0°在中心，+180°在右边缘
+                return ((lon + 180) / 360) * canvas.width;
+            };
+            const latToY = (lat) => ((90 - lat) / 180) * canvas.height;
+            
+            // 绘制中国区域高亮
+            ctx.fillStyle = 'rgba(255, 50, 50, 0.5)';
+            ctx.strokeStyle = 'rgba(255, 215, 0, 1)';
+            ctx.lineWidth = 6;
+            
+            // 中国边界轮廓（简化版，更准确的形状）
+            ctx.beginPath();
+            // 西北新疆
+            ctx.moveTo(lonToX(73), latToY(40));
+            ctx.lineTo(lonToX(80), latToY(45));
+            ctx.lineTo(lonToX(87), latToY(49));
+            // 北部边界（蒙古）
+            ctx.lineTo(lonToX(97), latToY(47));
+            ctx.lineTo(lonToX(105), latToY(42));
+            ctx.lineTo(lonToX(112), latToY(45));
+            ctx.lineTo(lonToX(120), latToY(50));
+            // 东北
+            ctx.lineTo(lonToX(127), latToY(53));
+            ctx.lineTo(lonToX(135), latToY(49));
+            ctx.lineTo(lonToX(134), latToY(45));
+            ctx.lineTo(lonToX(128), latToY(42));
+            // 东部沿海
+            ctx.lineTo(lonToX(124), latToY(40));
+            ctx.lineTo(lonToX(122), latToY(32));
+            ctx.lineTo(lonToX(121), latToY(28));
+            ctx.lineTo(lonToX(120), latToY(24));
+            ctx.lineTo(lonToX(117), latToY(23));
+            // 南部
+            ctx.lineTo(lonToX(110), latToY(18));
+            ctx.lineTo(lonToX(106), latToY(22));
+            ctx.lineTo(lonToX(100), latToY(22));
+            ctx.lineTo(lonToX(97), latToY(28));
+            // 西南（云南、西藏）
+            ctx.lineTo(lonToX(92), latToY(27));
+            ctx.lineTo(lonToX(84), latToY(28));
+            ctx.lineTo(lonToX(79), latToY(30));
+            ctx.lineTo(lonToX(74), latToY(35));
+            ctx.lineTo(lonToX(73), latToY(40));
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 台湾 (约 121°E, 23.5°N)
+            ctx.beginPath();
+            ctx.ellipse(lonToX(121), latToY(23.5), 10, 28, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 海南岛 (约 110°E, 19°N)
+            ctx.beginPath();
+            ctx.ellipse(lonToX(110), latToY(19), 18, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 添加"中国"标签 - 放在中国中部位置 (约 105°E, 35°N)
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 52px Microsoft YaHei, Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+            ctx.shadowBlur = 15;
+            ctx.fillText('中 国', lonToX(105), latToY(34));
+            ctx.font = 'bold 28px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('CHINA', lonToX(105), latToY(30));
+            
+            // 首都北京标记 (116.4°E, 39.9°N)
+            ctx.fillStyle = '#ffff00';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(lonToX(116.4), latToY(39.9), 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('★ 北京', lonToX(119), latToY(41));
+            
+            ctx.shadowBlur = 0;
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const highlightMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthWrite: false
+            });
+            
+            const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+            // 重要：高亮层要添加到earth上，这样会跟着地球一起自转
+            // 不需要额外旋转，因为和地球用相同的UV映射
+            earth.add(highlight);
+        }
+        
+        // ============================================
+        // 创建地球大气层效果
+        // ============================================
+        function createAtmosphere() {
+            // 内层大气（蓝色辉光）
+            const atmosphereGeometry = new THREE.SphereGeometry(2.12, 64, 64);
+            const atmosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4da6ff,
+                transparent: true,
+                opacity: 0.12,
+                side: THREE.BackSide,
+                depthWrite: false
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            atmosphere.rotation.x = OBLIQUITY_RAD;
+            atmosphere.renderOrder = 8;
+            earthGroup.add(atmosphere);
+            
+            // 外层大气光晕
+            const outerAtmosphereGeometry = new THREE.SphereGeometry(2.25, 64, 64);
+            const outerAtmosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x87ceeb,
+                transparent: true,
+                opacity: 0.06,
+                side: THREE.BackSide,
+                depthWrite: false
+            });
+            const outerAtmosphere = new THREE.Mesh(outerAtmosphereGeometry, outerAtmosphereMaterial);
+            outerAtmosphere.rotation.x = OBLIQUITY_RAD;
+            outerAtmosphere.renderOrder = 7;
+            earthGroup.add(outerAtmosphere);
+        }
+        
+        // ============================================
+        // 创建中国位置3D标记（已禁用，使用覆盖层替代）
+        // ============================================
+        function createChinaMarker() {
+            // 中国高亮由 addChinaHighlightOverlay 函数处理
+            // 此函数保留为空，避免重复标记
+        }
+        
+        // ============================================
+        // 创建自转方向标签（已移除3D标签，改用右下角UI说明）
+        // ============================================
+        function createRotationLabel() {
+            // 不再在3D场景中添加跟随地球的自转标签
+            // 相关信息已移至右下角的视角说明面板
+        }
+
+        // ============================================
+        // 创建地轴
+        // ============================================
+        function createEarthAxis() {
+            // 地轴主体（使用圆柱体而非线条，更明显）
+            const axisLength = 5;
+            const axisRadius = 0.03;
+            
+            const axisGeometry = new THREE.CylinderGeometry(axisRadius, axisRadius, axisLength * 2, 8);
+            const axisMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.9
+            });
+            const axis = new THREE.Mesh(axisGeometry, axisMaterial);
+            earth.add(axis);
+
+            // 北极点标记（绿色锥形箭头）
+            const northArrowGeometry = new THREE.ConeGeometry(0.15, 0.4, 8);
+            const northArrowMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            const northArrow = new THREE.Mesh(northArrowGeometry, northArrowMaterial);
+            northArrow.position.set(0, axisLength + 0.2, 0);
+            earth.add(northArrow);
+
+            // 南极点标记（小球）
+            const southPoleGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+            const southPoleMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            const southPole = new THREE.Mesh(southPoleGeometry, southPoleMaterial);
+            southPole.position.set(0, -axisLength, 0);
+            earth.add(southPole);
+            
+            // 添加自转方向箭头（绕地轴的弧形箭头）
+            createRotationArrow();
+        }
+        
+        // ============================================
+        // 创建自转方向指示（简化版 - 只用标签）
+        // ============================================
+        function createRotationArrow() {
+            // 移除了3D弧形箭头，保持视觉简洁
+            // 自转方向通过标签说明
+        }
+
+        // ============================================
+        // 创建纬线（赤道、北回归线、南回归线）
+        // ============================================
+        function createLatitudeLines() {
+            // 赤道 - 绿色（粗线）
+            createLatitudeLine(0, 0x44ff44, '赤道 0°', 0.85, 2);
+            
+            // 北回归线 - 橙红色
+            createLatitudeLine(OBLIQUITY, 0xff6633, '北回归线 23.5°N', 0.85, 1.5);
+            
+            // 南回归线 - 蓝色
+            createLatitudeLine(-OBLIQUITY, 0x33bbff, '南回归线 23.5°S', 0.85, 1.5);
+        }
+
+        function createLatitudeLine(latitude, color, label, opacity = 1, thickness = 1) {
+            const latRad = latitude * Math.PI / 180;
+            const radius = 2.03 * Math.cos(latRad);  // 略大于地球半径
+            const y = 2.03 * Math.sin(latRad);
+
+            // 使用 TubeGeometry 创建粗线效果
+            const segments = 64;
+            const points = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(
+                    radius * Math.cos(theta),
+                    y,
+                    radius * Math.sin(theta)
+                ));
+            }
+
+            // 创建曲线路径
+            const curve = new THREE.CatmullRomCurve3(points, true);
+            
+            // 使用 TubeGeometry 来创建有粗细的线
+            const tubeRadius = 0.02 * thickness;
+            const tubeGeometry = new THREE.TubeGeometry(curve, 64, tubeRadius, 8, true);
+            const tubeMaterial = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: opacity
+            });
+            
+            const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+            earth.add(tube);
+        }
+
+        // ============================================
+        // 创建公转轨道
+        // ============================================
+        function createOrbit() {
+            const orbitRadius = 15;
+            const segments = 128;
+            const points = [];
+
+            for (let i = 0; i <= segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(
+                    orbitRadius * Math.cos(theta),
+                    0,
+                    orbitRadius * Math.sin(theta)
+                ));
+            }
+
+            const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const orbitMaterial = new THREE.LineDashedMaterial({
+                color: 0x666666,
+                dashSize: 0.5,
+                gapSize: 0.3
+            });
+            
+            orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
+            orbitLine.computeLineDistances();
+            scene.add(orbitLine);
+            
+            // 创建黄道面（半透明圆盘）
+            createEclipticPlane(orbitRadius);
+            
+            // 添加公转方向箭头
+            createOrbitDirectionArrows(orbitRadius);
+
+            // 添加节气位置标记
+            addSeasonMarkers(orbitRadius);
+        }
+        
+        // ============================================
+        // 创建公转方向标签（已移除，改用右下角UI说明）
+        // ============================================
+        function createOrbitDirectionArrows(radius) {
+            // 不再在3D场景中添加公转方向标签
+            // 相关信息已移至右下角的视角说明面板
+        }
+        
+        // ============================================
+        // 创建黄道面可视化
+        // ============================================
+        function createEclipticPlane(radius) {
+            // 黄道面 - 半透明的圆形平面
+            const planeGeometry = new THREE.RingGeometry(3.5, radius + 2, 64);
+            const planeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4466aa,
+                transparent: true,
+                opacity: 0.08,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = Math.PI / 2; // 旋转使其水平
+            plane.renderOrder = -1; // 确保在地球之后渲染
+            scene.add(plane);
+            
+            // 添加黄道面标签
+            addTextSprite('黄道面', new THREE.Vector3(-18, 0.5, 0), 0x6688cc, 0.4);
+        }
+
+        // ============================================
+        // 添加节气位置标记
+        // ============================================
+        function addSeasonMarkers(radius) {
+            const seasonData = [
+                { angle: 0, label: '春分', color: 0x66bb6a },
+                { angle: 90, label: '夏至', color: 0xff7043 },
+                { angle: 180, label: '秋分', color: 0xffb74d },
+                { angle: 270, label: '冬至', color: 0x4fc3f7 }
+            ];
+
+            seasonData.forEach(season => {
+                const theta = season.angle * Math.PI / 180;
+                const x = radius * Math.cos(theta);
+                const z = radius * Math.sin(theta);
+
+                // 位置标记点
+                const markerGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+                const markerMaterial = new THREE.MeshBasicMaterial({ color: season.color });
+                const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                marker.position.set(x, 0, z);
+                scene.add(marker);
+
+                // 标签
+                addTextSprite(season.label, new THREE.Vector3(x, 1.5, z), season.color);
+            });
+        }
+
+        // ============================================
+        // 创建北极星
+        // ============================================
+        function createPolarStar() {
+            // 北极星位置（地轴延长方向，远处）
+            // 
+            // 坐标系定义：
+            // - 太阳在原点 (0, 0, 0)
+            // - 黄道面为 XZ 平面 (y=0)
+            // - 公转轨道：地球从 angle=0 (+X方向) 开始逆时针公转
+            //   - angle=0 (春分): 地球在 +X 方向
+            //   - angle=90 (夏至): 地球在 +Z 方向  
+            //   - angle=180 (秋分): 地球在 -X 方向
+            //   - angle=270 (冬至): 地球在 -Z 方向
+            //
+            // 地轴指向北极星，北极星方向：
+            // - 相对于黄道面法线 (+Y方向) 倾斜 23.5°
+            // - 夏至时北极朝向太阳，说明地轴向 -Z 方向倾斜
+            // - 所以北极星在 Y-Z 平面内，向 -Z 方向倾斜 23.5°
+            //
+            const distance = 40;
+            const y = distance * Math.cos(OBLIQUITY_RAD);
+            const z = -distance * Math.sin(OBLIQUITY_RAD); // 向-Z倾斜
+
+            // 北极星主体（更大更亮）
+            const starGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+            polarStar = new THREE.Mesh(starGeometry, starMaterial);
+            polarStar.position.set(0, y, z);
+            scene.add(polarStar);
+
+            // 多层发光效果
+            const glowColors = [0xffffcc, 0xffffaa, 0xffff88];
+            const glowSizes = [1.2, 1.6, 2.0];
+            const glowOpacities = [0.4, 0.2, 0.1];
+            
+            glowColors.forEach((color, i) => {
+                const glowGeometry = new THREE.SphereGeometry(glowSizes[i], 16, 16);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: glowOpacities[i]
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                polarStar.add(glow);
+            });
+
+            // 添加星芒效果
+            createStarSpikes(polarStar);
+
+            // 北极星标签
+            addTextSprite('⭐ 北极星', new THREE.Vector3(2, y + 1, z), 0xffffcc, 0.7);
+            addTextSprite('(地轴始终指向这里)', new THREE.Vector3(2, y - 1.5, z), 0xaaaaaa, 0.4);
+        }
+        
+        // 创建星芒效果
+        function createStarSpikes(star) {
+            const spikeCount = 4;
+            const spikeLength = 2;
+            
+            for (let i = 0; i < spikeCount; i++) {
+                const angle = (i / spikeCount) * Math.PI;
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array([
+                    -spikeLength * Math.cos(angle), -spikeLength * Math.sin(angle), 0,
+                    spikeLength * Math.cos(angle), spikeLength * Math.sin(angle), 0
+                ]);
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const material = new THREE.LineBasicMaterial({
+                    color: 0xffffcc,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                
+                const spike = new THREE.Line(geometry, material);
+                star.add(spike);
+            }
+        }
+
+        // ============================================
+        // 创建太阳光线（直射线）
+        // ============================================
+        let subsolarMarker = null;
+        
+        function createSunRay() {
+            // 创建多条光线以表示太阳光
+            const rayCount = 5;
+            for (let i = 0; i < rayCount; i++) {
+                const rayGeometry = new THREE.BufferGeometry();
+                const rayPositions = new Float32Array(6);
+                rayGeometry.setAttribute('position', new THREE.BufferAttribute(rayPositions, 3));
+                
+                const opacity = i === 2 ? 1 : 0.4; // 中间的光线最亮
+                const rayMaterial = new THREE.LineBasicMaterial({
+                    color: 0xffff00,
+                    transparent: true,
+                    opacity: opacity,
+                    linewidth: 2
+                });
+                
+                const ray = new THREE.Line(rayGeometry, rayMaterial);
+                ray.userData.rayIndex = i;
+                scene.add(ray);
+                
+                if (i === 2) {
+                    sunRay = ray; // 主光线
+                }
+            }
+            
+            // 创建太阳直射点标记（在地球表面）
+            const markerGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+            const markerMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.9
+            });
+            subsolarMarker = new THREE.Mesh(markerGeometry, markerMaterial);
+            scene.add(subsolarMarker);
+            
+            // 直射点外围发光
+            const glowGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff6600,
+                transparent: true,
+                opacity: 0.5
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            subsolarMarker.add(glow);
+            
+            // 初始化时立即更新一次
+            updateSunRay();
+        }
+
+        // ============================================
+        // 更新太阳光线和直射点
+        // ============================================
+        function updateSunRay() {
+            if (!sunRay || !earthGroup || !sun) return;
+            
+            const earthPos = earthGroup.position.clone();
+            const sunPos = sun.position.clone();
+            
+            // 计算方向
+            const direction = earthPos.clone().sub(sunPos).normalize();
+            const endPoint = earthPos.clone();
+            const startPoint = sunPos.clone().add(direction.clone().multiplyScalar(3.5));
+
+            // 更新主光线
+            const positions = sunRay.geometry.attributes.position.array;
+            positions[0] = startPoint.x;
+            positions[1] = startPoint.y;
+            positions[2] = startPoint.z;
+            positions[3] = endPoint.x;
+            positions[4] = endPoint.y;
+            positions[5] = endPoint.z;
+            sunRay.geometry.attributes.position.needsUpdate = true;
+            
+            // 更新直射点标记位置
+            if (subsolarMarker) {
+                // 直射点应该在地球表面，朝向太阳的一侧
+                // 考虑地轴倾斜，计算直射点纬度
+                const subsolarLat = OBLIQUITY * Math.sin(orbitAngle * Math.PI / 180);
+                const subsolarLatRad = subsolarLat * Math.PI / 180;
+                
+                // 计算直射点在地球表面的位置
+                // 直射点总是在日地连线与地球表面的交点
+                const markerPos = earthPos.clone().add(direction.clone().multiplyScalar(-2.05));
+                subsolarMarker.position.copy(markerPos);
+            }
+        }
+
+        // ============================================
+        // 创建文字标签
+        // ============================================
+        function addTextSprite(text, position, color, scale = 0.6) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+
+            context.fillStyle = 'transparent';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            context.font = 'Bold 28px Microsoft YaHei, Arial';
+            context.textAlign = 'center';
+            context.fillStyle = '#' + color.toString(16).padStart(6, '0');
+            context.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true
+            });
+
+            const sprite = new THREE.Sprite(material);
+            sprite.position.copy(position);
+            sprite.scale.set(4 * scale, 1 * scale, 1);
+            scene.add(sprite);
+        }
+
+        // ============================================
+        // 创建标签（简化版）
+        // ============================================
+        function createLabels() {
+            // 移除了黄赤交角弧线，保持视觉简洁
+        }
+        
+        function createObliquityArc() {
+            // 已移除 - 保持视觉简洁
+        }
+
+        // ============================================
+        // 更新地球在轨道上的位置
+        // ============================================
+        function updateOrbitPosition(angle) {
+            orbitAngle = angle;
+            const theta = angle * Math.PI / 180;
+            const radius = 15;
+            
+            earthGroup.position.x = radius * Math.cos(theta);
+            earthGroup.position.z = radius * Math.sin(theta);
+            
+            // 地轴始终指向北极星（宇宙空间中的固定方向）
+            // 
+            // 坐标系与物理原理：
+            // - 黄道面为 XZ 平面，太阳在原点
+            // - 公转轨道：angle=0(春分,+X) → angle=90(夏至,+Z) → angle=180(秋分,-X) → angle=270(冬至,-Z)
+            // - 北极星位于 (0, y, -z) 方向，即在 Y-Z 平面内向 -Z 方向倾斜 23.5°
+            // - earth.rotation.x = OBLIQUITY_RAD 使地轴在 Y-Z 平面内向北极星倾斜
+            //
+            // 公转时地轴指向验证：
+            // - 夏至（angle=90，地球在+Z方向）：地轴向-Z倾斜，即北极朝向太阳 ✓
+            // - 冬至（angle=270，地球在-Z方向）：地轴向-Z倾斜，即北极背向太阳 ✓
+            // - 春分/秋分：地轴倾斜方向（-Z）与日地连线（±X）垂直 ✓
+            //
+            // earthGroup只是平移不旋转，所以earth的rotation.x在世界坐标系中保持不变
+            // 这正是我们需要的效果！
+
+            // 更新太阳光线
+            updateSunRay();
+
+            // 更新信息面板
+            updateInfoPanel(angle);
+        }
+
+        // ============================================
+        // 更新信息面板
+        // ============================================
+        function updateInfoPanel(angle) {
+            // 计算太阳直射点纬度
+            // 公式：直射点纬度 = 黄赤交角 × sin(公转角度)
+            // 夏至(90°)时为+23.5°，冬至(270°)时为-23.5°
+            const subsolarLat = OBLIQUITY * Math.sin(angle * Math.PI / 180);
+            
+            let seasonName = '';
+            let dateRef = '';
+            
+            // 判断当前节气
+            if (angle >= 350 || angle < 10) {
+                seasonName = '春分';
+                dateRef = '3月21日左右';
+            } else if (angle >= 10 && angle < 80) {
+                seasonName = '春分→夏至';
+                dateRef = '3月~6月';
+            } else if (angle >= 80 && angle < 100) {
+                seasonName = '夏至';
+                dateRef = '6月22日左右';
+            } else if (angle >= 100 && angle < 170) {
+                seasonName = '夏至→秋分';
+                dateRef = '6月~9月';
+            } else if (angle >= 170 && angle < 190) {
+                seasonName = '秋分';
+                dateRef = '9月23日左右';
+            } else if (angle >= 190 && angle < 260) {
+                seasonName = '秋分→冬至';
+                dateRef = '9月~12月';
+            } else if (angle >= 260 && angle < 280) {
+                seasonName = '冬至';
+                dateRef = '12月22日左右';
+            } else {
+                seasonName = '冬至→春分';
+                dateRef = '12月~次年3月';
+            }
+
+            document.getElementById('current-season').textContent = `当前位置：${seasonName}`;
+            
+            // 格式化直射点纬度
+            let latText = '';
+            if (Math.abs(subsolarLat) < 0.5) {
+                latText = '赤道 (0°)';
+            } else if (subsolarLat > 0) {
+                latText = `北纬 ${subsolarLat.toFixed(1)}°`;
+                if (Math.abs(subsolarLat - OBLIQUITY) < 1) {
+                    latText = '北回归线 (北纬23.5°)';
+                }
+            } else {
+                latText = `南纬 ${Math.abs(subsolarLat).toFixed(1)}°`;
+                if (Math.abs(subsolarLat + OBLIQUITY) < 1) {
+                    latText = '南回归线 (南纬23.5°)';
+                }
+            }
+            
+            document.getElementById('subsolar-lat').textContent = latText;
+            document.getElementById('date-ref').textContent = dateRef;
+
+            // 更新滑动条
+            document.getElementById('orbit-slider').value = angle;
+        }
+
+        // ============================================
+        // 动画循环
+        // ============================================
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!isPaused) {
+                // 地球自转（绕自身的倾斜轴旋转，即绕本地Y轴旋转）
+                earth.rotation.y += 0.01 * animationSpeed;
+                
+                // 云层也跟着转，但速度稍慢
+                if (earth.userData.clouds) {
+                    earth.userData.clouds.rotation.y += 0.008 * animationSpeed;
+                }
+
+                // 地球公转
+                orbitAngle += 0.1 * animationSpeed;
+                if (orbitAngle >= 360) orbitAngle -= 360;
+                
+                updateOrbitPosition(orbitAngle);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // ============================================
+        // 窗口大小调整
+        // ============================================
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // ============================================
+        // 事件处理
+        // ============================================
+        function setupEventListeners() {
+            // 季节按钮
+            document.querySelectorAll('.season-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const season = this.dataset.season;
+                    const data = seasons[season];
+                    
+                    // 更新按钮状态
+                    document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 更新位置
+                    updateOrbitPosition(data.angle);
+                });
+            });
+
+            // 轨道滑动条
+            document.getElementById('orbit-slider').addEventListener('input', function() {
+                updateOrbitPosition(parseFloat(this.value));
+                
+                // 取消季节按钮的激活状态
+                document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+            });
+
+            // 速度控制
+            document.getElementById('pause-btn').addEventListener('click', function() {
+                isPaused = !isPaused;
+                this.textContent = isPaused ? '播放' : '暂停';
+            });
+
+            document.getElementById('slow-btn').addEventListener('click', function() {
+                animationSpeed = 0.3;
+                isPaused = false;
+                document.getElementById('pause-btn').textContent = '暂停';
+                updateSpeedButtons(this);
+            });
+
+            document.getElementById('normal-btn').addEventListener('click', function() {
+                animationSpeed = 1;
+                isPaused = false;
+                document.getElementById('pause-btn').textContent = '暂停';
+                updateSpeedButtons(this);
+            });
+
+            document.getElementById('fast-btn').addEventListener('click', function() {
+                animationSpeed = 3;
+                isPaused = false;
+                document.getElementById('pause-btn').textContent = '暂停';
+                updateSpeedButtons(this);
+            });
+
+            // 知识卡片悬停提示
+            document.querySelectorAll('.knowledge-card').forEach(card => {
+                card.addEventListener('mouseenter', showTooltip);
+                card.addEventListener('mouseleave', hideTooltip);
+            });
+        }
+
+        function updateSpeedButtons(activeBtn) {
+            document.querySelectorAll('.speed-control button:not(#pause-btn)').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            activeBtn.classList.add('active');
+        }
+
+        // 工具提示
+        const tooltips = {
+            obliquity: '黄赤交角是地球自转轴与黄道面（地球公转轨道平面）法线之间的夹角，约为23.5°。这个角度使得地球在公转过程中，太阳直射点会在南北回归线之间移动，从而产生四季变化。',
+            'tropic-cancer': '北回归线位于北纬23.5°，这个纬度值正好等于黄赤交角。夏至日这一天，太阳直射点到达一年中的最北位置——北回归线，此后开始南移。',
+            'tropic-capricorn': '南回归线位于南纬23.5°，同样等于黄赤交角的度数。冬至日这一天，太阳直射点到达一年中的最南位置——南回归线，此后开始北移。'
+        };
+
+        function showTooltip(e) {
+            const tooltip = document.getElementById('tooltip');
+            const type = e.target.dataset.tooltip;
+            
+            if (tooltips[type]) {
+                tooltip.textContent = tooltips[type];
+                tooltip.classList.add('visible');
+                
+                const rect = e.target.getBoundingClientRect();
+                tooltip.style.left = rect.right + 10 + 'px';
+                tooltip.style.top = rect.top + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        // ============================================
+        // 知识点弹窗
+        // ============================================
+        function showKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.add('visible');
+            initCarousel();
+        }
+        
+        function hideKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.remove('visible');
+        }
+        
+        // 点击弹窗背景关闭
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('knowledge-modal');
+            if (e.target === modal) {
+                hideKnowledgeModal();
+            }
+        });
+
+        // ============================================
+        // 知识卡片轮播功能
+        // ============================================
+        function initCarousel() {
+            const carousel = document.getElementById('knowledge-carousel');
+            const dotsContainer = document.getElementById('carousel-dots');
+            const prevBtn = document.getElementById('carousel-prev');
+            const nextBtn = document.getElementById('carousel-next');
+            const items = carousel.querySelectorAll('.knowledge-item');
+            const totalItems = items.length;
+            
+            // 清空并创建点指示器
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalItems; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'dot' + (i === 0 ? ' active' : '');
+                dot.addEventListener('click', () => scrollToCard(i));
+                dotsContainer.appendChild(dot);
+            }
+            
+            // 滚动到指定卡片
+            function scrollToCard(index) {
+                const cardWidth = items[0].offsetWidth + 24; // 卡片宽度 + gap
+                carousel.scrollTo({
+                    left: index * cardWidth,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // 更新点指示器
+            function updateDots() {
+                const scrollLeft = carousel.scrollLeft;
+                const cardWidth = items[0].offsetWidth + 24;
+                const activeIndex = Math.round(scrollLeft / cardWidth);
+                
+                dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === activeIndex);
+                });
+            }
+            
+            // 上一张
+            prevBtn.addEventListener('click', () => {
+                const cardWidth = items[0].offsetWidth + 24;
+                carousel.scrollBy({
+                    left: -cardWidth,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 下一张
+            nextBtn.addEventListener('click', () => {
+                const cardWidth = items[0].offsetWidth + 24;
+                carousel.scrollBy({
+                    left: cardWidth,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 监听滚动更新点
+            carousel.addEventListener('scroll', updateDots);
+            
+            // 初始化滚动到第一张
+            carousel.scrollLeft = 0;
+            updateDots();
+        }
+
+        // ============================================
+        // 启动程序
+        // ============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            init();
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
