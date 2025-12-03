@@ -334,18 +334,21 @@
             background: #64b4ff;
         }
         
-        /* 知识点弹窗 - 现代透明风格 */
+        /* 知识点弹窗 - 现代透明卡片风格 */
         .knowledge-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 2000;
+            padding: 20px;
         }
         
         .knowledge-modal.visible {
@@ -353,105 +356,196 @@
         }
         
         .knowledge-modal-content {
-            background: rgba(10, 20, 40, 0.55);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 20px;
-            padding: 22px;
-            width: 88%;
-            max-width: 480px;
-            max-height: 70vh;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background: rgba(15, 25, 45, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
             position: relative;
-            display: flex;
-            flex-direction: column;
         }
         
-        .knowledge-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            flex-shrink: 0;
+        .knowledge-modal-content::-webkit-scrollbar {
+            width: 6px;
         }
         
-        .knowledge-modal-header h2 {
+        .knowledge-modal-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        .knowledge-modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 100, 0.3);
+            border-radius: 3px;
+        }
+        
+        .knowledge-modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 200, 100, 0.5);
+        }
+        
+        .knowledge-modal-content h2 {
             color: #fff;
-            font-size: 1rem;
-            margin: 0;
-            font-weight: 500;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            background: linear-gradient(135deg, #ffd54f, #ffb74d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        .knowledge-modal-header .close-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
+        .knowledge-modal-content .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
             color: #fff;
             font-size: 1.2rem;
             cursor: pointer;
-            opacity: 0.9;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
         
-        .knowledge-modal-header .close-btn:hover {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.25);
+        .knowledge-modal-content .close-btn:hover {
+            background: rgba(255, 100, 100, 0.3);
+            border-color: rgba(255, 100, 100, 0.5);
+            transform: rotate(90deg);
         }
         
-        /* 卡片滑动容器 */
-        .card-container {
-            flex: 1;
+        /* 知识卡片轮播布局 */
+        .knowledge-cards-container {
             position: relative;
             overflow: hidden;
-            min-height: 260px;
         }
         
-        .card-wrapper {
+        .knowledge-cards-grid {
             display: flex;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 100%;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding: 10px 5px 20px 5px;
+            -webkit-overflow-scrolling: touch;
         }
         
-        .knowledge-card {
-            min-width: 100%;
-            max-height: 100%;
-            overflow-y: auto;
-            padding: 0 4px;
-            box-sizing: border-box;
+        .knowledge-cards-grid::-webkit-scrollbar {
+            height: 6px;
         }
         
-        .knowledge-card-inner {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 18px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            min-height: 240px;
+        .knowledge-cards-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
         }
         
-        .knowledge-card h4 {
-            color: #ffd54f;
+        .knowledge-cards-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 200, 100, 0.3);
+            border-radius: 3px;
+        }
+        
+        .knowledge-cards-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 200, 100, 0.5);
+        }
+        
+        .knowledge-item {
+            flex: 0 0 340px;
+            scroll-snap-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .knowledge-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ffd54f, #ff7043, #4fc3f7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .knowledge-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .knowledge-item:hover::before {
+            opacity: 1;
+        }
+        
+        .knowledge-item h4 {
+            color: #fff;
             margin-bottom: 12px;
             font-size: 1rem;
             font-weight: 600;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .knowledge-card p {
-            color: rgba(255, 255, 255, 0.95);
+        .knowledge-item h4 .icon {
+            font-size: 1.2rem;
+        }
+        
+        .knowledge-item p {
+            color: rgba(255, 255, 255, 0.75);
             font-size: 0.85rem;
             line-height: 1.7;
             margin-bottom: 8px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .knowledge-item p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .knowledge-item p strong {
+            color: #ffd54f;
+            font-weight: 500;
         }
 
-        .knowledge-card .formula {
+        .knowledge-item ul {
+            margin-left: 16px;
+            margin-top: 8px;
+        }
+
+        .knowledge-item li {
+            color: rgba(255, 255, 255, 0.75);
+            margin: 4px 0;
+            line-height: 1.6;
+            font-size: 0.85rem;
+        }
+
+        .knowledge-item li strong {
+            color: #ffd54f;
+            font-weight: 500;
+        }
+
+        .knowledge-item .formula {
             background: rgba(0, 0, 0, 0.3);
             padding: 10px 12px;
             border-radius: 8px;
@@ -461,23 +555,9 @@
             font-size: 0.8rem;
             line-height: 1.6;
             border: 1px solid rgba(128, 255, 170, 0.25);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .knowledge-card ul {
-            margin-left: 16px;
-            margin-top: 8px;
-        }
-
-        .knowledge-card li {
-            color: rgba(255, 255, 255, 0.92);
-            margin: 4px 0;
-            line-height: 1.6;
-            font-size: 0.85rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         
-        .knowledge-card table {
+        .knowledge-item table {
             width: 100%;
             color: rgba(255, 255, 255, 0.9);
             margin-top: 8px;
@@ -485,83 +565,121 @@
             font-size: 0.8rem;
         }
         
-        .knowledge-card th {
+        .knowledge-item th {
             padding: 6px;
             text-align: left;
             color: #ffd54f;
             border-bottom: 1px solid rgba(255,255,255,0.2);
             font-weight: 500;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         
-        .knowledge-card td {
+        .knowledge-item td {
             padding: 5px 6px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         
-        /* 导航控制 */
-        .card-nav {
+        /* 特殊卡片样式 - 记忆要点 */
+        .knowledge-item.highlight-card {
+            background: linear-gradient(135deg, rgba(255, 213, 79, 0.1), rgba(255, 152, 0, 0.05));
+            border-color: rgba(255, 213, 79, 0.2);
+        }
+        
+        .knowledge-item.highlight-card h4 {
+            color: #ffd54f;
+        }
+        
+        .knowledge-item.highlight-card li {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .knowledge-item.highlight-card li::before {
+            content: '✦';
+            color: #ffd54f;
             flex-shrink: 0;
         }
         
-        .card-nav-btn {
-            background: rgba(255, 255, 255, 0.12);
+        /* 轮播导航指示器 */
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+        
+        .carousel-nav .nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 8px 16px;
-            border-radius: 10px;
+            font-size: 1.2rem;
             cursor: pointer;
-            font-size: 0.82rem;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 5px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            justify-content: center;
+            transition: all 0.3s ease;
         }
         
-        .card-nav-btn:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.22);
-            transform: translateY(-1px);
+        .carousel-nav .nav-btn:hover {
+            background: rgba(255, 213, 79, 0.3);
+            border-color: rgba(255, 213, 79, 0.5);
         }
         
-        .card-nav-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
+        .carousel-nav .nav-btn:active {
+            transform: scale(0.95);
         }
         
-        .card-indicator {
+        .carousel-dots {
             display: flex;
-            gap: 6px;
-            align-items: center;
+            gap: 8px;
         }
         
-        .card-dot {
+        .carousel-dots .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
         
-        .card-dot.active {
+        .carousel-dots .dot.active {
             background: #ffd54f;
-            transform: scale(1.2);
+            width: 24px;
+            border-radius: 4px;
         }
         
-        .card-dot:hover {
-            background: rgba(255, 255, 255, 0.5);
+        .carousel-dots .dot:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.4);
         }
         
-        .card-counter {
-            color: #aaa;
-            font-size: 0.85rem;
+        .swipe-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .knowledge-modal-content {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            
+            .knowledge-item {
+                flex: 0 0 280px;
+                padding: 16px;
+            }
+            
+            .carousel-nav .nav-btn {
+                width: 36px;
+                height: 36px;
+            }
         }
 
         /* 纬度指示器 */
@@ -680,134 +798,107 @@
     <!-- 知识点弹窗 -->
     <div class="knowledge-modal" id="knowledge-modal">
         <div class="knowledge-modal-content">
-            <div class="knowledge-modal-header">
-                <h2>📚 地球自转 - 知识卡片</h2>
-                <button class="close-btn" onclick="hideKnowledgeModal()">×</button>
-            </div>
+            <button class="close-btn" onclick="hideKnowledgeModal()">×</button>
+            <h2>📚 地球自转 - 完整知识说明</h2>
             
-            <div class="card-container">
-                <div class="card-wrapper" id="card-wrapper">
-                    <!-- 卡片1: 什么是地球自转 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>🌍 什么是地球自转？</h4>
-                            <p><strong>定义：</strong>地球绕着穿过南北两极的地轴自西向东转动，称为地球自转。</p>
-                            <p><strong>方向：</strong>自西向东。从北极上空俯视为逆时针方向，从南极上空仰视为顺时针方向。</p>
-                            <p><strong>地轴指向：</strong>地轴北端始终指向北极星附近，这一指向在短期内基本保持不变。</p>
-                        </div>
+            <div class="knowledge-cards-container">
+                <div class="knowledge-cards-grid" id="knowledge-carousel">
+                    <div class="knowledge-item">
+                        <h4><span class="icon">🌍</span> 什么是地球自转？</h4>
+                        <p><strong>定义：</strong>地球绕着穿过南北两极的地轴自西向东转动，称为地球自转。</p>
+                        <p><strong>方向：</strong>自西向东。从北极上空俯视为逆时针方向，从南极上空仰视为顺时针方向。</p>
+                        <p><strong>地轴指向：</strong>地轴北端始终指向北极星附近，这一指向在短期内基本保持不变。</p>
                     </div>
                     
-                    <!-- 卡片2: 东和西的定义 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>🧭 东和西是如何定义的？</h4>
-                            <p><strong>核心概念：</strong>东西方向是基于地球自转来定义的。</p>
-                            <ul>
-                                <li><strong>东方</strong> = 地球自转的前进方向（太阳升起的方向）</li>
-                                <li><strong>西方</strong> = 地球自转的反方向（太阳落下的方向）</li>
-                            </ul>
-                            <div class="formula">地球自转 → 太阳东升西落 → 人类定义"东""西"</div>
-                            <p><strong>如何判断？</strong>面向北方，右手边=东，左手边=西</p>
-                        </div>
+                    <div class="knowledge-item">
+                        <h4><span class="icon">🧭</span> 东和西是如何定义的？</h4>
+                        <p><strong>核心概念：</strong>东西方向是基于地球自转来定义的。</p>
+                        <ul>
+                            <li><strong>东方</strong> = 地球自转的前进方向（太阳升起的方向）</li>
+                            <li><strong>西方</strong> = 地球自转的反方向（太阳落下的方向）</li>
+                        </ul>
+                        <div class="formula">地球自转 → 太阳东升西落 → 人类定义"东""西"</div>
+                        <p><strong>如何判断？</strong>面向北方，右手边=东，左手边=西</p>
                     </div>
                     
-                    <!-- 卡片3: 自转周期 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>⏰ 自转周期</h4>
-                            <p><strong>太阳日 (Solar Day)：</strong></p>
-                            <ul>
-                                <li>以太阳为参照物测定</li>
-                                <li>时间长度：<strong>24小时</strong></li>
-                                <li>昼夜更替的周期</li>
-                            </ul>
-                            <p><strong>恒星日 (Sidereal Day)：</strong></p>
-                            <ul>
-                                <li>以遥远恒星为参照物</li>
-                                <li>时间长度：<strong>23小时56分4秒</strong></li>
-                                <li>地球自转的真正周期</li>
-                            </ul>
-                            <p style="color: #80ffaa;"><strong>差异原因：</strong>地球公转使其需多转约1°才能再次面对太阳</p>
-                        </div>
+                    <div class="knowledge-item">
+                        <h4><span class="icon">⏰</span> 自转周期</h4>
+                        <p><strong>太阳日 (Solar Day)：</strong></p>
+                        <ul>
+                            <li>以太阳为参照物测定</li>
+                            <li>时间长度：<strong>24小时</strong></li>
+                            <li>昼夜更替的周期</li>
+                        </ul>
+                        <p><strong>恒星日 (Sidereal Day)：</strong></p>
+                        <ul>
+                            <li>以遥远恒星为参照物</li>
+                            <li>时间长度：<strong>23小时56分4秒</strong></li>
+                            <li>地球自转的真正周期</li>
+                        </ul>
+                        <p style="color: #80ffaa;"><strong>差异原因：</strong>地球公转使其需多转约1°才能再次面对太阳</p>
                     </div>
                     
-                    <!-- 卡片4: 角速度 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>📐 角速度 (Angular Velocity)</h4>
-                            <p><strong>定义：</strong>单位时间内转过的角度。</p>
-                            <div class="formula">角速度 ω = 360° ÷ 24h ≈ 15°/小时</div>
-                            <p><strong>特点：</strong></p>
-                            <ul>
-                                <li>除南北两极点外，地球表面各点的角速度都<strong>相等</strong></li>
-                                <li>两极点的角速度为 <strong>0</strong></li>
-                                <li>任意纬度的角速度都是 15°/小时</li>
-                            </ul>
-                        </div>
+                    <div class="knowledge-item">
+                        <h4><span class="icon">📐</span> 角速度 (Angular Velocity)</h4>
+                        <p><strong>定义：</strong>单位时间内转过的角度。</p>
+                        <div class="formula">角速度 ω = 360° ÷ 24h ≈ 15°/小时</div>
+                        <p><strong>特点：</strong></p>
+                        <ul>
+                            <li>除南北两极点外，地球表面各点的角速度都<strong>相等</strong></li>
+                            <li>两极点的角速度为 <strong>0</strong></li>
+                            <li>任意纬度的角速度都是 15°/小时</li>
+                        </ul>
                     </div>
                     
-                    <!-- 卡片5: 线速度 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>📏 线速度 (Linear Velocity)</h4>
-                            <p><strong>定义：</strong>单位时间内走过的弧长（距离）。</p>
-                            <div class="formula">v = 2πR·cos(纬度) ÷ 24h<br>赤道线速度 ≈ 1670 km/h</div>
-                            <p><strong>规律：</strong></p>
-                            <ul>
-                                <li>线速度从<strong>赤道向两极递减</strong></li>
-                                <li>赤道处线速度最大</li>
-                                <li>两极点线速度为 0</li>
-                                <li>60°纬度 = 赤道的一半</li>
-                            </ul>
-                        </div>
+                    <div class="knowledge-item">
+                        <h4><span class="icon">📏</span> 线速度 (Linear Velocity)</h4>
+                        <p><strong>定义：</strong>单位时间内走过的弧长（距离）。</p>
+                        <div class="formula">v = 2πR·cos(纬度) ÷ 24h<br>赤道线速度 ≈ 1670 km/h</div>
+                        <p><strong>规律：</strong></p>
+                        <ul>
+                            <li>线速度从<strong>赤道向两极递减</strong></li>
+                            <li>赤道处线速度最大</li>
+                            <li>两极点线速度为 0</li>
+                            <li>60°纬度 = 赤道的一半</li>
+                        </ul>
                     </div>
                     
-                    <!-- 卡片6: 线速度对比表 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>🌐 不同纬度线速度对比</h4>
-                            <table>
-                                <tr>
-                                    <th>纬度</th>
-                                    <th style="text-align: center;">线速度 (km/h)</th>
-                                    <th style="text-align: center;">相对赤道</th>
-                                </tr>
-                                <tr><td>0° (赤道)</td><td style="text-align: center;">1670</td><td style="text-align: center;">100%</td></tr>
-                                <tr><td>30°</td><td style="text-align: center;">1447</td><td style="text-align: center;">87%</td></tr>
-                                <tr><td>45°</td><td style="text-align: center;">1181</td><td style="text-align: center;">71%</td></tr>
-                                <tr><td>60°</td><td style="text-align: center;">835</td><td style="text-align: center;">50%</td></tr>
-                                <tr><td>90° (极点)</td><td style="text-align: center;">0</td><td style="text-align: center;">0%</td></tr>
-                            </table>
-                        </div>
+                    <div class="knowledge-item">
+                        <h4><span class="icon">🌐</span> 不同纬度线速度对比</h4>
+                        <table>
+                            <tr>
+                                <th>纬度</th>
+                                <th style="text-align: center;">线速度 (km/h)</th>
+                                <th style="text-align: center;">相对赤道</th>
+                            </tr>
+                            <tr><td>0° (赤道)</td><td style="text-align: center;">1670</td><td style="text-align: center;">100%</td></tr>
+                            <tr><td>30°</td><td style="text-align: center;">1447</td><td style="text-align: center;">87%</td></tr>
+                            <tr><td>45°</td><td style="text-align: center;">1181</td><td style="text-align: center;">71%</td></tr>
+                            <tr><td>60°</td><td style="text-align: center;">835</td><td style="text-align: center;">50%</td></tr>
+                            <tr><td>90° (极点)</td><td style="text-align: center;">0</td><td style="text-align: center;">0%</td></tr>
+                        </table>
                     </div>
                     
-                    <!-- 卡片7: 记忆要点 -->
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-inner">
-                            <h4>💡 记忆要点</h4>
-                            <ul>
-                                <li>自转方向：<strong>自西向东</strong>（北极上空看逆时针）</li>
-                                <li>地轴指向：<strong>北极星附近</strong></li>
-                                <li>太阳日 <strong>24h</strong>，恒星日 <strong>23h56m4s</strong></li>
-                                <li>角速度：除极点外全球相等，约 <strong>15°/小时</strong></li>
-                                <li>线速度：<strong>赤道最大</strong>，向两极递减</li>
-                                <li>60°纬度线速度 = 赤道的<strong>一半</strong></li>
-                            </ul>
-                        </div>
+                    <div class="knowledge-item highlight-card">
+                        <h4><span class="icon">💡</span> 记忆要点</h4>
+                        <ul>
+                            <li>自转方向：<strong>自西向东</strong>（北极上空看逆时针）</li>
+                            <li>地轴指向：<strong>北极星附近</strong></li>
+                            <li>太阳日 <strong>24h</strong>，恒星日 <strong>23h56m4s</strong></li>
+                            <li>角速度：除极点外全球相等，约 <strong>15°/小时</strong></li>
+                            <li>线速度：<strong>赤道最大</strong>，向两极递减</li>
+                            <li>60°纬度线速度 = 赤道的<strong>一半</strong></li>
+                        </ul>
                     </div>
                 </div>
             </div>
             
-            <!-- 导航控制 -->
-            <div class="card-nav">
-                <button class="card-nav-btn" id="prev-card" onclick="prevCard()">
-                    <span>◀</span> 上一个
-                </button>
-                <div class="card-indicator" id="card-indicator"></div>
-                <button class="card-nav-btn" id="next-card" onclick="nextCard()">
-                    下一个 <span>▶</span>
-                </button>
+            <div class="carousel-nav">
+                <button class="nav-btn" id="carousel-prev">‹</button>
+                <div class="carousel-dots" id="carousel-dots"></div>
+                <button class="nav-btn" id="carousel-next">›</button>
             </div>
+            <div class="swipe-hint">← 左右滑动查看更多 →</div>
         </div>
     </div>
 
@@ -1530,113 +1621,95 @@
         }
 
         // ============================================
-        // 知识点弹窗 - 卡片滑动功能
+        // 知识点弹窗 - 轮播功能
         // ============================================
-        let currentCardIndex = 0;
-        const totalCards = 7;
-        
         function showKnowledgeModal() {
             document.getElementById('knowledge-modal').classList.add('visible');
-            currentCardIndex = 0;
-            updateCardDisplay();
-            initCardIndicator();
+            initCarousel();
         }
         
         function hideKnowledgeModal() {
             document.getElementById('knowledge-modal').classList.remove('visible');
         }
         
-        function initCardIndicator() {
-            const indicator = document.getElementById('card-indicator');
-            indicator.innerHTML = '';
-            for (let i = 0; i < totalCards; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'card-dot' + (i === 0 ? ' active' : '');
-                dot.onclick = () => goToCard(i);
-                indicator.appendChild(dot);
-            }
-        }
-        
-        function updateCardDisplay() {
-            const wrapper = document.getElementById('card-wrapper');
-            wrapper.style.transform = `translateX(-${currentCardIndex * 100}%)`;
-            
-            // 更新导航按钮状态
-            document.getElementById('prev-card').disabled = currentCardIndex === 0;
-            document.getElementById('next-card').disabled = currentCardIndex === totalCards - 1;
-            
-            // 更新指示器
-            const dots = document.querySelectorAll('.card-dot');
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentCardIndex);
-            });
-        }
-        
-        function prevCard() {
-            if (currentCardIndex > 0) {
-                currentCardIndex--;
-                updateCardDisplay();
-            }
-        }
-        
-        function nextCard() {
-            if (currentCardIndex < totalCards - 1) {
-                currentCardIndex++;
-                updateCardDisplay();
-            }
-        }
-        
-        function goToCard(index) {
-            currentCardIndex = index;
-            updateCardDisplay();
-        }
-        
-        // 支持键盘左右箭头切换
-        document.addEventListener('keydown', function(e) {
-            const modal = document.getElementById('knowledge-modal');
-            if (modal.classList.contains('visible')) {
-                if (e.key === 'ArrowLeft') {
-                    prevCard();
-                } else if (e.key === 'ArrowRight') {
-                    nextCard();
-                } else if (e.key === 'Escape') {
-                    hideKnowledgeModal();
-                }
-            }
-        });
-        
-        // 支持触摸滑动
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        document.getElementById('knowledge-modal').addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-        
-        document.getElementById('knowledge-modal').addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-            
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    // 向左滑动 -> 下一张
-                    nextCard();
-                } else {
-                    // 向右滑动 -> 上一张
-                    prevCard();
-                }
-            }
-        }
-        
         // 点击弹窗背景关闭
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('knowledge-modal');
             if (e.target === modal) {
+                hideKnowledgeModal();
+            }
+        });
+
+        // ============================================
+        // 知识卡片轮播功能
+        // ============================================
+        function initCarousel() {
+            const carousel = document.getElementById('knowledge-carousel');
+            const dotsContainer = document.getElementById('carousel-dots');
+            const prevBtn = document.getElementById('carousel-prev');
+            const nextBtn = document.getElementById('carousel-next');
+            const items = carousel.querySelectorAll('.knowledge-item');
+            const totalItems = items.length;
+            
+            // 清空并创建点指示器
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalItems; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'dot' + (i === 0 ? ' active' : '');
+                dot.addEventListener('click', () => scrollToCard(i));
+                dotsContainer.appendChild(dot);
+            }
+            
+            // 滚动到指定卡片
+            function scrollToCard(index) {
+                const cardWidth = items[0].offsetWidth + 16; // 卡片宽度 + gap
+                carousel.scrollTo({
+                    left: index * cardWidth,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // 更新点指示器
+            function updateDots() {
+                const scrollLeft = carousel.scrollLeft;
+                const cardWidth = items[0].offsetWidth + 16;
+                const activeIndex = Math.round(scrollLeft / cardWidth);
+                
+                dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === activeIndex);
+                });
+            }
+            
+            // 上一张
+            prevBtn.addEventListener('click', () => {
+                const cardWidth = items[0].offsetWidth + 16;
+                carousel.scrollBy({
+                    left: -cardWidth,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 下一张
+            nextBtn.addEventListener('click', () => {
+                const cardWidth = items[0].offsetWidth + 16;
+                carousel.scrollBy({
+                    left: cardWidth,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 监听滚动更新点
+            carousel.addEventListener('scroll', updateDots);
+            
+            // 初始化滚动到第一张
+            carousel.scrollLeft = 0;
+            updateDots();
+        }
+        
+        // 支持键盘ESC关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('knowledge-modal');
+            if (modal.classList.contains('visible') && e.key === 'Escape') {
                 hideKnowledgeModal();
             }
         });
