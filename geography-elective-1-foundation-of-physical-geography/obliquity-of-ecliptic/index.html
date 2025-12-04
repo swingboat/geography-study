@@ -751,6 +751,14 @@
                         <div class="legend-color china"></div>
                         <span>中国位置</span>
                     </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffcc66;"></div>
+                        <span>黄道面</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #66ccaa;"></div>
+                        <span>赤道面</span>
+                    </div>
                 </div>
                 
                 <!-- 右下角动画控制 -->
@@ -1099,6 +1107,9 @@
             
             // 绘制赤道和回归线
             createLatitudeLines();
+            
+            // 创建赤道面（跟随地球）
+            createEquatorialPlane();
             
             // 添加自转方向标签（添加到earthGroup，不随地球自转）
             createRotationLabel();
@@ -1453,12 +1464,12 @@
         // 创建黄道面可视化
         // ============================================
         function createEclipticPlane(radius) {
-            // 黄道面 - 半透明的圆形平面
+            // 黄道面 - 半透明的圆形平面（黄色调）- 固定在空间中
             const planeGeometry = new THREE.RingGeometry(3.5, radius + 2, 64);
             const planeMaterial = new THREE.MeshBasicMaterial({
-                color: 0x4466aa,
+                color: 0xffcc66,
                 transparent: true,
-                opacity: 0.08,
+                opacity: 0.15,
                 side: THREE.DoubleSide,
                 depthWrite: false
             });
@@ -1468,8 +1479,135 @@
             plane.renderOrder = -1; // 确保在地球之后渲染
             scene.add(plane);
             
+            // 添加黄道面边缘线（更明显）
+            const edgeGeometry = new THREE.RingGeometry(radius + 1.8, radius + 2, 64);
+            const edgeMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffdd88,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            edge.rotation.x = Math.PI / 2;
+            edge.renderOrder = 0;
+            scene.add(edge);
+            
             // 添加黄道面标签
-            addTextSprite('黄道面', new THREE.Vector3(-18, 0.5, 0), 0x6688cc, 0.4);
+            addTextSprite('黄道面', new THREE.Vector3(-18, 0.5, 0), 0xffcc66, 0.5);
+            
+            // 创建黄赤交角标注
+            createObliquityAngleIndicator();
+        }
+        
+        // ============================================
+        // 创建赤道面可视化（跟随地球）
+        // ============================================
+        function createEquatorialPlane() {
+            // 赤道面 - 半透明的圆形平面（蓝绿色调）
+            // 这个面要添加到 earthGroup，跟随地球一起移动
+            const planeRadius = 8; // 较小的半径，围绕地球
+            const planeGeometry = new THREE.RingGeometry(2.5, planeRadius, 64);
+            const planeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x66ccaa,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            // 赤道面是地球的XZ平面，所以旋转到水平
+            plane.rotation.x = Math.PI / 2;
+            plane.renderOrder = -1;
+            
+            // 添加到 earthGroup，这样会跟随地球一起公转
+            earthGroup.add(plane);
+            
+            // 添加赤道面边缘线（更明显）
+            const edgeGeometry = new THREE.RingGeometry(planeRadius - 0.2, planeRadius, 64);
+            const edgeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x88ffcc,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            edge.rotation.x = Math.PI / 2;
+            edge.renderOrder = 0;
+            earthGroup.add(edge);
+            
+            // 赤道面标签也要跟随地球
+            // 使用3D文字精灵
+            const labelSprite = createTextSprite('赤道面', 0x66ccaa, 0.5);
+            labelSprite.position.set(0, 0, planeRadius + 1);
+            earthGroup.add(labelSprite);
+        }
+        
+        // ============================================
+        // 创建黄赤交角指示器
+        // ============================================
+        function createObliquityAngleIndicator() {
+            // 在两个平面的交界处创建弧线和角度标注
+            // 这个指示器显示黄道面和赤道面在某个位置的夹角
+            const arcRadius = 10;
+            const segments = 32;
+            const points = [];
+            
+            // 创建从黄道面（y=0）到赤道面倾斜方向的弧线
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * OBLIQUITY_RAD;
+                const y = arcRadius * Math.sin(angle);
+                const z = -arcRadius * Math.cos(angle) + arcRadius; // 调整位置
+                points.push(new THREE.Vector3(-17, y, z));
+            }
+            
+            const arcGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const arcMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff,
+                linewidth: 3,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const arc = new THREE.Line(arcGeometry, arcMaterial);
+            scene.add(arc);
+            
+            // 添加角度标注
+            const midAngle = OBLIQUITY_RAD / 2;
+            const labelY = arcRadius * Math.sin(midAngle);
+            const labelZ = -arcRadius * Math.cos(midAngle) + arcRadius;
+            addTextSprite('23.5°', new THREE.Vector3(-15, labelY, labelZ), 0xffff00, 0.6);
+            addTextSprite('黄赤交角', new THREE.Vector3(-15, labelY - 1, labelZ), 0xffdd88, 0.45);
+        }
+        
+        // ============================================
+        // 辅助函数：创建文字精灵（返回对象）
+        // ============================================
+        function createTextSprite(text, color, scale = 0.6) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+
+            context.fillStyle = 'transparent';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            context.font = 'Bold 28px Microsoft YaHei, Arial';
+            context.textAlign = 'center';
+            context.fillStyle = '#' + color.toString(16).padStart(6, '0');
+            context.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true
+            });
+
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(4 * scale, 1 * scale, 1);
+            return sprite;
         }
 
         // ============================================
