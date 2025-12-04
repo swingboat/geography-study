@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组件库完整展示 - UI + Three.js场景组件</title>
+    
+    <link rel="stylesheet" href="./styles/ui-components.css">
+    
+    <style>
+        /* 覆盖 ui-components.css 中的固定样式，允许滚动 */
+        html, body {
+            overflow: visible !important;
+            overflow-y: auto !important;
+            position: static !important;
+            height: auto !important;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+        
+        .container {
+            overflow: visible !important;
+            height: auto !important;
+        }
+        
+        .demo-header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #64b4ff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .demo-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #ffd54f;
+        }
+        
+        /* Tab切换 */
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 68px;
+            z-index: 99;
+        }
+        
+        .tab-btn {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #64b4ff, #4a9eff);
+            color: #fff;
+            border-color: #64b4ff;
+            box-shadow: 0 4px 15px rgba(100, 180, 255, 0.3);
+        }
+        
+        /* 演示区域 */
+        .demo-container {
+            display: none;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .demo-container.active {
+            display: block;
+        }
+        
+        /* 组件表格 */
+        .component-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 15px;
+        }
+        
+        .component-row {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .component-row td {
+            padding: 20px;
+            vertical-align: top;
+        }
+        
+        .component-demo {
+            width: 35%;
+            border-right: 2px solid rgba(100, 180, 255, 0.2);
+            position: relative;
+            min-height: 200px;
+            max-height: 250px;
+        }
+        
+        .component-info {
+            width: 65%;
+        }
+        
+        .component-title {
+            font-size: 1.3rem;
+            color: #64b4ff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .component-title .badge {
+            background: #4fc3f7;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .component-desc {
+            color: #aaa;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #a9dc76;
+        }
+        
+        .code-label {
+            color: #ffd54f;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        /* 演示容器 */
+        .demo-preview {
+            position: relative;
+            height: 100%;
+            min-height: 180px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            overflow: hidden;
+        }
+        
+        /* 让组件在演示区内正确显示 */
+        .demo-preview > * {
+            position: relative !important;
+            transform: scale(0.75);
+            transform-origin: center center;
+            max-width: 100%;
+        }
+        
+        /* 特殊处理按钮 - 强制居中 */
+        .demo-preview .home-btn,
+        .demo-preview .help-btn {
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: auto !important;
+            right: auto !important;
+            transform: none !important;
+            display: block !important;
+            margin: auto !important;
+        }
+        
+        /* 面板在演示区的样式调整 - 统一尺寸 */
+        .demo-preview .info-panel,
+        .demo-preview .legend-panel,
+        .demo-preview .control-panel {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            bottom: auto !important;
+            right: auto !important;
+            margin: 0 auto !important;
+            max-width: 95%;
+            transform: scale(0.8) !important;
+        }
+        
+        /* 底部按钮栏特殊处理 */
+        .demo-preview .bottom-btn-bar {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            bottom: auto !important;
+            right: auto !important;
+            margin: 0 !important;
+            width: 100%;
+            transform: scale(0.7) !important;
+        }
+        
+        .demo-note-inline {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #666;
+            white-space: nowrap;
+        }
+        
+        /* Three.js 场景演示 */
+        .scene-demo-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto 30px auto;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 500px;
+        }
+        
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .scene-components-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .scene-info-overlay h3 {
+            margin: 0 0 10px 0;
+            color: #64b4ff;
+            font-size: 1rem;
+        }
+        
+        .scene-info-overlay ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        
+        .scene-info-overlay li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>🎨 地理教学动画组件库 - 完整展示</h1>
+    </div>
+    
+    <div class="tab-buttons">
+        <button class="tab-btn active" data-view="ui-demo">🎨 UI组件库</button>
+        <button class="tab-btn" data-view="scene-demo">🌍 Three.js场景组件库</button>
+    </div>
+    
+    <!-- UI组件演示 -->
+    <div id="ui-demo" class="demo-container active">
+        <table class="component-table">
+            <!-- 返回主页按钮 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" id="demo-home-btn">
+                    </div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🏠 返回主页按钮</span>
+                        <span class="badge">createHomeButton</span>
+                    </div>
+                    <div class="component-desc">
+                        固定在页面左上角的返回按钮，点击返回到主页。支持自定义链接地址。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const homeBtn = GeoUIComponents.createHomeButton('../index.html');
+document.body.appendChild(homeBtn);</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 帮助按钮 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" id="demo-help-btn">
+                    </div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>❓ 帮助按钮</span>
+                        <span class="badge">createHelpButton</span>
+                    </div>
+                    <div class="component-desc">
+                        固定在页面左下角的帮助按钮，点击可触发自定义回调函数（通常用于显示帮助信息或知识点弹窗）。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const helpBtn = GeoUIComponents.createHelpButton(() => {
+    GeoKnowledgeModal.show();  // 显示知识点弹窗
+});
+document.body.appendChild(helpBtn);</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 信息面板 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" id="demo-info-panel"></div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>📊 信息面板</span>
+                        <span class="badge">createInfoPanel</span>
+                    </div>
+                    <div class="component-desc">
+                        显示当前状态信息的面板，支持自定义标题、位置和内容。可动态更新内部内容。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const infoPanel = GeoUIComponents.createInfoPanel({
+    id: 'info-panel',
+    title: '📊 当前信息',
+    position: 'top-left'
+});
+
+// 添加内容
+const content = document.getElementById('info-panel-content');
+content.innerHTML = `
+    &lt;div&gt;季节：春分&lt;/div&gt;
+    &lt;div&gt;直射点：赤道 (0°)&lt;/div&gt;
+`;
+
+container.appendChild(infoPanel);</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 图例面板 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" id="demo-legend-panel"></div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🎨 图例面板</span>
+                        <span class="badge">createLegendPanel</span>
+                    </div>
+                    <div class="component-desc">
+                        显示颜色图例的面板，用于解释场景中不同颜色的含义。支持传入图例数组。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const legends = [
+    { color: '#66bb6a', label: '赤道 (0°)' },
+    { color: '#ff7043', label: '北回归线 (23.5°N)' },
+    { color: '#4fc3f7', label: '南回归线 (23.5°S)' }
+];
+
+const legendPanel = GeoUIComponents.createLegendPanel(legends);
+container.appendChild(legendPanel);</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 控制面板 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" id="demo-control-panel"></div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🎮 控制面板</span>
+                        <span class="badge">createControlPanel</span>
+                    </div>
+                    <div class="component-desc">
+                        动画控制面板，包含滑块和按钮组。支持自定义滑块参数和按钮配置。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const controlPanel = GeoUIComponents.createControlPanel({
+    title: '▶ 动画控制',
+    sliders: [
+        {
+            id: 'orbit-slider',
+            label: '公转',
+            min: 0,
+            max: 360,
+            value: 0,
+            onChange: (e) => {
+                console.log('角度:', e.target.value);
+            }
+        }
+    ],
+    buttons: [
+        { id: 'pause-btn', label: '暂停', onClick: pause },
+        { id: 'normal-btn', label: '正常', active: true, onClick: normal }
+    ]
+});
+
+container.appendChild(controlPanel);</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 底部按钮栏 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" id="demo-bottom-bar"></div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>📱 底部按钮栏</span>
+                        <span class="badge">createBottomButtonBar</span>
+                    </div>
+                    <div class="component-desc">
+                        固定在页面底部的按钮组，常用于场景切换（如季节选择）。支持高亮当前选中项。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const buttons = [
+    { label: '🌸 春分', value: '0', active: true, onClick: selectSeason },
+    { label: '☀️ 夏至', value: '90', onClick: selectSeason },
+    { label: '🍂 秋分', value: '180', onClick: selectSeason },
+    { label: '❄️ 冬至', value: '270', onClick: selectSeason }
+];
+
+const bottomBar = GeoUIComponents.createBottomButtonBar(buttons);
+container.appendChild(bottomBar);</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 知识点弹窗 -->
+            <tr class="component-row">
+                <td class="component-demo">
+                    <div class="demo-preview" style="padding: 20px; text-align: center;">
+                        <button onclick="GeoKnowledgeModal.show()" style="padding: 10px 20px; background: #64b4ff; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+                            点击查看知识点弹窗
+                        </button>
+                        <div class="demo-note-inline">点击按钮体验</div>
+                    </div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>📚 知识点弹窗</span>
+                        <span class="badge">GeoKnowledgeModal</span>
+                    </div>
+                    <div class="component-desc">
+                        知识点展示弹窗，支持卡片轮播和导航点。可配置多张卡片，每张卡片包含图标、标题和内容列表。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const cards = [
+    {
+        icon: '🌍',
+        title: '组件化设计',
+        content: [
+            '&lt;strong&gt;优势：&lt;/strong&gt;统一的视觉风格',
+            '&lt;strong&gt;可维护性：&lt;/strong&gt;修改一处，全部更新'
+        ]
+    },
+    {
+        icon: '💡',
+        title: '使用建议',
+        highlight: true,
+        content: ['查看 README.md 了解详细API']
+    }
+];
+
+const modal = GeoKnowledgeModal.createModal({
+    title: '📚 知识点说明',
+    cards: cards
+});
+document.body.appendChild(modal);
+
+// 显示/隐藏
+GeoKnowledgeModal.show();
+GeoKnowledgeModal.hide();</pre>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Three.js场景组件演示 -->
+    <div id="scene-demo" class="demo-container">
+        <table class="component-table">
+            <!-- 基础场景 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">🎬</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">基础场景</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🎬 基础场景</span>
+                        <span class="badge">createBasicScene</span>
+                    </div>
+                    <div class="component-desc">
+                        创建Three.js的基础场景，包括scene、camera、renderer和响应式窗口调整。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>let scene, camera, renderer;
+
+({ scene, camera, renderer } = GeoSceneComponents.createBasicScene({
+    canvasId: 'three-canvas',
+    fov: 45,
+    cameraPosition: { x: 0, y: 10, z: 28 },
+    lookAt: { x: 0, y: -3, z: 0 }
+}));</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 地球 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">🌍</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">地球</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🌍 地球</span>
+                        <span class="badge">createEarth</span>
+                    </div>
+                    <div class="component-desc">
+                        创建地球球体，支持NASA真实纹理、大气层、云层等效果。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>const earth = GeoSceneComponents.createEarth(parent, {
+    radius: 2,
+    obliquity: 23.5,
+    useTexture: true,
+    atmosphere: true,
+    clouds: true
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 星空 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">✨</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">星空</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>✨ 星空</span>
+                        <span class="badge">createStarfield</span>
+                    </div>
+                    <div class="component-desc">
+                        创建随机分布的星空背景，支持自定义星星数量、大小和颜色。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>GeoSceneComponents.createStarfield(scene, {
+    count: 2000,
+    size: 0.5,
+    color: 0xffffff
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 太阳 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">☀️</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">太阳</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>☀️ 太阳</span>
+                        <span class="badge">createSun</span>
+                    </div>
+                    <div class="component-desc">
+                        创建发光的太阳球体，带有自发光效果和点光源。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>GeoSceneComponents.createSun(scene, {
+    radius: 1.5,
+    position: { x: -20, y: 0, z: 0 }
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 轨道 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">⭕</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">轨道</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>⭕ 轨道</span>
+                        <span class="badge">createOrbit</span>
+                    </div>
+                    <div class="component-desc">
+                        创建公转轨道圆环，用于显示地球绕太阳的运动轨迹。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>GeoSceneComponents.createOrbit(scene, {
+    radius: 15,
+    color: 0x888888,
+    opacity: 0.3
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 平面 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">📐</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">平面</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>📐 平面</span>
+                        <span class="badge">createPlane</span>
+                    </div>
+                    <div class="component-desc">
+                        创建圆环形平面（如黄道面、赤道面），用于展示天文几何关系。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>// 黄道面
+GeoSceneComponents.createPlane(scene, {
+    innerRadius: 3.5,
+    outerRadius: 17,
+    color: 0xffcc66,
+    opacity: 0.15,
+    rotation: { x: Math.PI / 2, y: 0, z: 0 }
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 纬线 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">🌐</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">纬线</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🌐 纬线</span>
+                        <span class="badge">createLatitudeLine</span>
+                    </div>
+                    <div class="component-desc">
+                        创建地球表面的纬线圈（如赤道、回归线、极圈）。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>// 赤道
+GeoSceneComponents.createLatitudeLine(earthGroup, {
+    earthRadius: 2,
+    latitude: 0,
+    color: 0xff0000,
+    lineWidth: 3
+});
+
+// 北回归线
+GeoSceneComponents.createLatitudeLine(earthGroup, {
+    earthRadius: 2,
+    latitude: 23.5,
+    color: 0xffa500
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 地轴 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">📏</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">地轴</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>📏 地轴</span>
+                        <span class="badge">createAxis</span>
+                    </div>
+                    <div class="component-desc">
+                        创建地球自转轴，用于展示地轴倾斜。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>GeoSceneComponents.createAxis(earthGroup, {
+    height: 6,
+    color: 0xffffff
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 北极星 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">⭐</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">北极星</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>⭐ 北极星</span>
+                        <span class="badge">createPolarStar</span>
+                    </div>
+                    <div class="component-desc">
+                        创建北极星及其指示线，用于演示地轴指向。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>GeoSceneComponents.createPolarStar(scene, {
+    distance: 25,
+    size: 0.8
+});</pre>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- 季节标记 -->
+            <tr class="component-row">
+                <td class="component-demo" style="text-align: center; padding: 30px;">
+                    <div style="font-size: 3rem;">🌸☀️🍂❄️</div>
+                    <div style="color: #64b4ff; margin-top: 10px;">季节标记</div>
+                </td>
+                <td class="component-info">
+                    <div class="component-title">
+                        <span>🌸 季节标记</span>
+                        <span class="badge">createSeasonMarkers</span>
+                    </div>
+                    <div class="component-desc">
+                        在轨道上创建春分、夏至、秋分、冬至四个季节标记点。
+                    </div>
+                    <div class="code-label">📝 使用方法：</div>
+                    <div class="code-block">
+                        <pre>GeoSceneComponents.createSeasonMarkers(scene, {
+    orbitRadius: 15
+});</pre>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Three.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="./js/ui-components.js"></script>
+    <script src="./js/knowledge-modal.js"></script>
+    <script src="./js/scene-components.js"></script>
+    
+    <script>
+        // Tab切换
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const viewName = this.dataset.view;
+                
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.demo-container').forEach(v => v.classList.remove('active'));
+                document.getElementById(viewName).classList.add('active');
+                
+                if (viewName === 'scene-demo' && !window.sceneInitialized) {
+                    initThreeJSDemo();
+                    window.sceneInitialized = true;
+                }
+            });
+        });
+        
+        // 初始化UI组件
+        function initUIComponents() {
+            // 返回按钮和帮助按钮 - 添加到body用于实际功能
+            document.body.appendChild(GeoUIComponents.createHomeButton('../index.html'));
+            document.body.appendChild(GeoUIComponents.createHelpButton(() => GeoKnowledgeModal.show()));
+            
+            // 同时在演示区创建缩小版（移除文字）
+            const homeBtnDemo = GeoUIComponents.createHomeButton('#');
+            homeBtnDemo.innerHTML = '🏠'; // 只保留图标
+            homeBtnDemo.onclick = (e) => e.preventDefault();
+            document.getElementById('demo-home-btn').appendChild(homeBtnDemo);
+            
+            const helpBtnDemo = GeoUIComponents.createHelpButton(() => {});
+            helpBtnDemo.innerHTML = '?'; // 只保留图标
+            document.getElementById('demo-help-btn').appendChild(helpBtnDemo);
+            
+            // 信息面板
+            const infoPanel = GeoUIComponents.createInfoPanel({
+                id: 'demo-info',
+                title: '📊 示例信息',
+                position: 'top-left'
+            });
+            const content = document.getElementById('demo-info-content');
+            if (content) {
+                content.innerHTML = `
+                    <div style="color: #ffd54f;">季节：春分</div>
+                    <div style="color: #81d4fa;">直射点：赤道 (0°)</div>
+                `;
+            }
+            document.getElementById('demo-info-panel').appendChild(infoPanel);
+            
+            // 图例面板
+            const legends = [
+                { color: '#66bb6a', label: '赤道 (0°)' },
+                { color: '#ff7043', label: '北回归线 (23.5°N)' },
+                { color: '#4fc3f7', label: '南回归线 (23.5°S)' }
+            ];
+            document.getElementById('demo-legend-panel').appendChild(
+                GeoUIComponents.createLegendPanel(legends)
+            );
+            
+            // 控制面板
+            const controlPanel = GeoUIComponents.createControlPanel({
+                title: '▶ 动画控制',
+                sliders: [{ id: 'demo-slider', label: '公转角度', min: 0, max: 360, value: 0 }],
+                buttons: [
+                    { id: 'demo-pause', label: '暂停' },
+                    { id: 'demo-normal', label: '正常', active: true },
+                    { id: 'demo-fast', label: '快速' }
+                ]
+            });
+            document.getElementById('demo-control-panel').appendChild(controlPanel);
+            
+            // 底部按钮栏
+            const seasonButtons = [
+                { label: '🌸 春分', value: '0', active: true },
+                { label: '☀️ 夏至', value: '90' },
+                { label: '🍂 秋分', value: '180' },
+                { label: '❄️ 冬至', value: '270' }
+            ];
+            document.getElementById('demo-bottom-bar').appendChild(
+                GeoUIComponents.createBottomButtonBar(seasonButtons)
+            );
+            
+            // 知识点弹窗
+            const modal = GeoKnowledgeModal.createModal({
+                title: '📚 UI组件库使用说明',
+                cards: [
+                    {
+                        icon: '🎨',
+                        title: 'UI组件库',
+                        content: [
+                            '<strong>统一风格：</strong>所有页面使用相同的UI设计',
+                            '<strong>快速开发：</strong>通过API快速创建UI元素',
+                            '<strong>易于维护：</strong>组件化架构，修改方便'
+                        ]
+                    },
+                    {
+                        icon: '📦',
+                        title: '组件列表',
+                        content: [
+                            '✅ 返回主页按钮 (createHomeButton)',
+                            '✅ 帮助按钮 (createHelpButton)',
+                            '✅ 信息面板 (createInfoPanel)',
+                            '✅ 图例面板 (createLegendPanel)',
+                            '✅ 控制面板 (createControlPanel)',
+                            '✅ 底部按钮栏 (createBottomButtonBar)',
+                            '✅ 知识点弹窗 (GeoKnowledgeModal)'
+                        ]
+                    },
+                    {
+                        icon: '💡',
+                        title: '使用建议',
+                        highlight: true,
+                        content: [
+                            '查看 common/README.md 了解完整API',
+                            '参考 example-full.html 查看完整示例',
+                            '遵循统一的命名规范'
+                        ]
+                    }
+                ]
+            });
+            document.body.appendChild(modal);
+            
+            console.log('✅ UI组件初始化完成');
+        }
+        
+        // 初始化Three.js场景
+        function initThreeJSDemo() {
+            let scene, camera, renderer;
+            ({ scene, camera, renderer } = GeoSceneComponents.createBasicScene({
+                canvasId: 'three-canvas',
+                fov: 45,
+                cameraPosition: { x: 5, y: 5, z: 25 },
+                lookAt: { x: 0, y: 0, z: 0 }
+            }));
+            
+            GeoSceneComponents.createStarfield(scene, { count: 2000 });
+            GeoSceneComponents.createSun(scene, { 
+                radius: 1.5,
+                position: { x: -18, y: 0, z: 0 }
+            });
+            
+            const earthGroup = new THREE.Group();
+            scene.add(earthGroup);
+            
+            const earth = GeoSceneComponents.createEarth(earthGroup, {
+                radius: 2,
+                obliquity: 23.5,
+                useTexture: true,
+                atmosphere: true,
+                clouds: true
+            });
+            
+            GeoSceneComponents.createEarthAxis(earth);
+            GeoSceneComponents.createLatitudeLine(earth, 0, { color: 0x44ff44 });
+            GeoSceneComponents.createLatitudeLine(earth, 23.5, { color: 0xff6633 });
+            GeoSceneComponents.createLatitudeLine(earth, -23.5, { color: 0x33bbff });
+            
+            GeoSceneComponents.createOrbit(scene, { radius: 15 });
+            GeoSceneComponents.createPlane(scene, {
+                innerRadius: 3.5,
+                outerRadius: 17,
+                color: 0xffcc66,
+                opacity: 0.15,
+                rotation: { x: Math.PI / 2, y: 0, z: 0 }
+            });
+            
+            GeoSceneComponents.createPlane(earthGroup, {
+                innerRadius: 2.5,
+                outerRadius: 8,
+                color: 0x66ccaa,
+                opacity: 0.15,
+                rotation: { x: Math.PI / 2, y: 0, z: 0 }
+            });
+            
+            GeoSceneComponents.createPolarStar(scene, {
+                distance: 40,
+                obliquity: 23.5
+            });
+            
+            const seasonData = [
+                { angle: 0, label: '春分', color: 0x66bb6a },
+                { angle: 90, label: '夏至', color: 0xff7043 },
+                { angle: 180, label: '秋分', color: 0xffb74d },
+                { angle: 270, label: '冬至', color: 0x4fc3f7 }
+            ];
+            GeoSceneComponents.createSeasonMarkers(scene, seasonData, 15);
+            GeoSceneComponents.addAmbientLight(scene);
+            
+            earthGroup.position.set(15, 0, 0);
+            
+            // 动画
+            let angle = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                earth.rotation.y += 0.005;
+                if (earth.userData.clouds) {
+                    earth.userData.clouds.rotation.y += 0.004;
+                }
+                angle += 0.1;
+                const theta = angle * Math.PI / 180;
+                earthGroup.position.x = 15 * Math.cos(theta);
+                earthGroup.position.z = 15 * Math.sin(theta);
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+        
+        // 页面加载时初始化
+        initUIComponents();
+    </script>
+</body>
+</html>
