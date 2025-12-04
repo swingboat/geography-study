@@ -1,0 +1,630 @@
+/**
+ * 地理教学动画 - 通用UI组件样式库
+ * 提供统一的视觉风格和可复用的组件
+ */
+
+/* ============================================
+   基础重置和全局样式
+   ============================================ */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    background: linear-gradient(135deg, #0c1445 0%, #1a237e 50%, #0d1b2a 100%);
+    color: #fff;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ============================================
+   页面头部
+   ============================================ */
+header {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 6px 15px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+header h1 {
+    font-size: 1.1rem;
+    white-space: nowrap;
+    text-shadow: 0 0 20px rgba(255, 200, 100, 0.5);
+}
+
+/* ============================================
+   主内容区域
+   ============================================ */
+.main-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+}
+
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a15 100%);
+}
+
+#three-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================
+   返回主页按钮
+   ============================================ */
+.home-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 213, 79, 0.9);
+    border: none;
+    color: #1a237e;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.home-btn:hover {
+    transform: scale(1.1);
+    background: #ffd54f;
+}
+
+/* ============================================
+   帮助按钮
+   ============================================ */
+.help-btn {
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(100, 180, 255, 0.9);
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+    z-index: 100;
+}
+
+.help-btn:hover {
+    transform: scale(1.1);
+    background: #64b4ff;
+}
+
+/* ============================================
+   信息面板 - 通用样式
+   ============================================ */
+.info-panel {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 10;
+}
+
+.info-panel h4 {
+    font-size: 0.85rem;
+    color: #ffd54f;
+    margin-bottom: 8px;
+}
+
+.info-panel .info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    color: #ccc;
+}
+
+/* ============================================
+   图例面板
+   ============================================ */
+.legend-panel {
+    position: absolute;
+    bottom: 70px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 50;
+}
+
+.legend-panel h4 {
+    color: #ffd54f;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 5px 0;
+    color: #ccc;
+}
+
+.legend-color {
+    width: 20px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+/* ============================================
+   控制面板
+   ============================================ */
+.control-panel {
+    position: absolute;
+    bottom: 70px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 50;
+}
+
+.control-panel h4 {
+    color: #ffd54f;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.control-panel .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.control-panel .slider-row label {
+    color: #aaa;
+    white-space: nowrap;
+    font-size: 0.7rem;
+}
+
+.control-panel input[type="range"] {
+    width: 80px;
+    height: 4px;
+}
+
+.control-panel .btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.control-panel button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: background 0.3s;
+}
+
+.control-panel button:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.control-panel button.active {
+    background: #ffd54f;
+    color: #000;
+}
+
+/* ============================================
+   底部按钮栏
+   ============================================ */
+.bottom-btn-bar {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 8px 15px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 50;
+}
+
+.bottom-btn-bar button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    color: #fff;
+}
+
+.bottom-btn-bar button:hover {
+    transform: scale(1.05);
+}
+
+.bottom-btn-bar button.active {
+    box-shadow: 0 0 0 2px #fff;
+}
+
+/* ============================================
+   知识点弹窗
+   ============================================ */
+.knowledge-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.knowledge-modal.visible {
+    display: flex;
+}
+
+.knowledge-modal-content {
+    background: rgba(15, 25, 45, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 30px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.knowledge-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.knowledge-modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.knowledge-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 200, 100, 0.3);
+    border-radius: 3px;
+}
+
+.knowledge-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 200, 100, 0.5);
+}
+
+.knowledge-modal-content h2 {
+    color: #fff;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    background: linear-gradient(135deg, #ffd54f, #ffb74d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.knowledge-modal-content .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.knowledge-modal-content .close-btn:hover {
+    background: rgba(255, 100, 100, 0.3);
+    border-color: rgba(255, 100, 100, 0.5);
+    transform: rotate(90deg);
+}
+
+/* ============================================
+   知识卡片
+   ============================================ */
+.knowledge-cards-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.knowledge-cards-grid {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 10px 5px 20px 5px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.knowledge-cards-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.knowledge-cards-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.knowledge-cards-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 200, 100, 0.3);
+    border-radius: 3px;
+}
+
+.knowledge-cards-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 200, 100, 0.5);
+}
+
+.knowledge-item {
+    flex: 0 0 340px;
+    scroll-snap-align: center;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.knowledge-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffd54f, #ff7043, #4fc3f7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.knowledge-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.knowledge-item:hover::before {
+    opacity: 1;
+}
+
+.knowledge-item h4 {
+    color: #fff;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.knowledge-item h4 .icon {
+    font-size: 1.2rem;
+}
+
+.knowledge-item p {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+
+.knowledge-item p:last-child {
+    margin-bottom: 0;
+}
+
+.knowledge-item p strong {
+    color: #ffd54f;
+    font-weight: 500;
+}
+
+.knowledge-item.highlight-card {
+    background: linear-gradient(135deg, rgba(255, 213, 79, 0.1), rgba(255, 152, 0, 0.05));
+    border-color: rgba(255, 213, 79, 0.2);
+}
+
+.knowledge-item.highlight-card h4 {
+    color: #ffd54f;
+}
+
+.knowledge-item.highlight-card p {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.knowledge-item.highlight-card p::before {
+    content: '✦';
+    color: #ffd54f;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   轮播导航
+   ============================================ */
+.carousel-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+    padding: 10px;
+}
+
+.carousel-nav .nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.carousel-nav .nav-btn:hover {
+    background: rgba(255, 213, 79, 0.3);
+    border-color: rgba(255, 213, 79, 0.5);
+}
+
+.carousel-nav .nav-btn:active {
+    transform: scale(0.95);
+}
+
+.carousel-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.carousel-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-dots .dot.active {
+    background: #ffd54f;
+    width: 24px;
+    border-radius: 4px;
+}
+
+.carousel-dots .dot:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.swipe-hint {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    margin-top: 5px;
+}
+
+/* ============================================
+   工具提示
+   ============================================ */
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    max-width: 250px;
+    line-height: 1.6;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip.visible {
+    opacity: 1;
+}
+
+/* ============================================
+   响应式调整
+   ============================================ */
+@media (max-width: 768px) {
+    .knowledge-modal-content {
+        padding: 20px;
+        border-radius: 16px;
+    }
+    
+    .knowledge-item {
+        flex: 0 0 280px;
+        padding: 16px;
+    }
+    
+    .carousel-nav .nav-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .control-panel,
+    .legend-panel {
+        font-size: 0.7rem;
+    }
+}
